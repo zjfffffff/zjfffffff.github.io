@@ -1,0 +1,1748 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.34.0.0
+Copyright (C) 2021 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: hhh ZJF, hhh, LIC=3UURY-IVXWU-067QU-SDUSN-M23WP-31LZ6
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.34.0.0
+Toolchain Path:  D:\Keil5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 7 (build 960)
+Assembler:       Armasm.exe V5.06 update 7 (build 960)
+Linker/Locator:  ArmLink.exe V5.06 update 7 (build 960)
+Library Manager: ArmAr.exe V5.06 update 7 (build 960)
+Hex Converter:   FromElf.exe V5.06 update 7 (build 960)
+CPU DLL:         SARMCM3.DLL V5.34.0.0
+Dialog DLL:      DCM.DLL V1.17.3.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.8.0
+Dialog DLL:      TCM.DLL V1.48.0.0
+ 
+<h2>Project:</h2>
+C:\Users\ZJF\Desktop\光栅二期\光栅二期（随动实验） （9.16）\光栅二期（随动实验） （9.16）\project\SweepFrequency.uvprojx
+Project File Date:  10/08/2022
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\Keil5\ARM\ARMCC\Bin'
+Build target 'SweepFrequency'
+compiling FsmCompensator.c...
+..\User\FsmCompensatorPara.h(100): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\FsmCompensator.c(596): warning:  #177-D: variable "Tao1"  was declared but never referenced
+  	double Tao1,Tao2;
+..\User\FsmCompensator.c(596): warning:  #177-D: variable "Tao2"  was declared but never referenced
+  	double Tao1,Tao2;
+..\User\FsmCompensator.c(597): warning:  #177-D: variable "fsmLeadLag2Tao1Hz"  was declared but never referenced
+  	float fsmLeadLag2Tao1Hz,fsmLeadLag2Tao2Hz;
+..\User\FsmCompensator.c(597): warning:  #177-D: variable "fsmLeadLag2Tao2Hz"  was declared but never referenced
+  	float fsmLeadLag2Tao1Hz,fsmLeadLag2Tao2Hz;
+..\User\FsmCompensator.c(845): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\FsmCompensator.c: 6 warnings, 0 errors
+compiling encode.c...
+compiling EXIT.c...
+..\User\EXIT.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\EXIT.c(82): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW + 0.001;
+..\User\EXIT.c(85): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWLY)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWLY)>-0.01))
+..\User\EXIT.c(93): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW - 0.001;
+..\User\EXIT.c(96): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWLY)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWLY)>-0.01))
+..\User\EXIT.c(103): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY + 0.001;
+..\User\EXIT.c(106): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYLY)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYLY)>-0.01))
+..\User\EXIT.c(114): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY - 0.001;
+..\User\EXIT.c(117): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYLY)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYLY)>-0.01))
+..\User\EXIT.c: 10 warnings, 0 errors
+compiling FSMC.c...
+compiling AngelCalculation1.c...
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\AngelCalculation1.c(137): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	FW_buchang_degree =  atanf(y2 / x2) * 180.0f / pi;
+..\User\AngelCalculation1.c(138): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	FY_buchang_degree =  atanf(z2 / sqrt((x2)*(x2)+(y2)*(y2)))*180.0f / pi / 2.0f - 7.5;
+..\User\AngelCalculation1.c(51): warning:  #177-D: variable "x1"  was declared but never referenced
+  	float x1 = 0.0;
+..\User\AngelCalculation1.c(52): warning:  #177-D: variable "y1"  was declared but never referenced
+  	float y1 = 0.0;
+..\User\AngelCalculation1.c(53): warning:  #177-D: variable "z1"  was declared but never referenced
+  	float z1 = 0.0;
+..\User\AngelCalculation1.c(54): warning:  #177-D: variable "Angle"  was declared but never referenced
+  	float Angle = 0.0;
+..\User\AngelCalculation1.c: 7 warnings, 0 errors
+compiling extiz.c...
+..\User\extiz.c(89): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\extiz.c: 1 warning, 0 errors
+compiling AttitudeAlgorithm.c...
+..\User\AttitudeAlgorithm.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\AttitudeAlgorithm.c(58): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	float RealAngle = 90.0 + NewAngle;
+..\User\AttitudeAlgorithm.c(59): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	r = CarrierHG * pi /180.0;
+..\User\AttitudeAlgorithm.c(60): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	p = CarrierFY * pi /180.0;
+..\User\AttitudeAlgorithm.c(62): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	y = CarrierFW * pi /180.0;
+..\User\AttitudeAlgorithm.c(63): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	angle_fy = SpaceSetValueFY * pi /180.0;
+..\User\AttitudeAlgorithm.c(64): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	angle_fw = SpaceSetValueFW * pi /180.0;
+..\User\AttitudeAlgorithm.c(65): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	angle_qj = -RealAngle * pi /180.0;
+..\User\AttitudeAlgorithm.c(86): warning:  #1-D: last line of file ends without a newline
+  	
+..\User\AttitudeAlgorithm.c: 9 warnings, 0 errors
+compiling DyCnvertCoordinate1.c...
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\DyCnvertCoordinate1.c(323): warning:  #177-D: variable "z"  was declared but never referenced
+  	float x,y,z;
+..\User\DyCnvertCoordinate1.c(369): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\DyCnvertCoordinate1.c: 3 warnings, 0 errors
+compiling can.c...
+..\User\can.c(164): warning:  #177-D: variable "NVIC_InitStructure"  was declared but never referenced
+  	NVIC_InitTypeDef  NVIC_InitStructure;
+..\User\can.c(228): warning:  #177-D: variable "NVIC_InitStructure"  was declared but never referenced
+  	NVIC_InitTypeDef  NVIC_InitStructure;
+..\User\can.c(314): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\can.c: 3 warnings, 0 errors
+compiling FsmCompensator_servo.c...
+..\User\FsmCompensatorPara_servo.h(94): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\FsmCompensator_servo.c(526): warning:  #177-D: variable "Tao1"  was declared but never referenced
+  	double Tao1,Tao2;
+..\User\FsmCompensator_servo.c(526): warning:  #177-D: variable "Tao2"  was declared but never referenced
+  	double Tao1,Tao2;
+..\User\FsmCompensator_servo.c(527): warning:  #177-D: variable "fsmLeadLag2Tao1Hz"  was declared but never referenced
+  	float fsmLeadLag2Tao1Hz,fsmLeadLag2Tao2Hz;
+..\User\FsmCompensator_servo.c(527): warning:  #177-D: variable "fsmLeadLag2Tao2Hz"  was declared but never referenced
+  	float fsmLeadLag2Tao1Hz,fsmLeadLag2Tao2Hz;
+..\User\FsmCompensator_servo.c: 5 warnings, 0 errors
+compiling ELMOTEST.c...
+..\User\ELMOTEST.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\ELMOTEST.c(234): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\ELMOTEST.c: 55 warnings, 0 errors
+compiling CalculatesLocation.c...
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\CalculatesLocation.c(39): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		float RealAngle = 90.0 + NewAngle;
+..\User\CalculatesLocation.c(44): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      y = azimuth * M_PI / (float)180;
+..\User\CalculatesLocation.c(45): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      p = pitch * M_PI / (float)180;
+..\User\CalculatesLocation.c(46): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      r = roll * M_PI / (float)180;
+..\User\CalculatesLocation.c(48): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      float angle1= AxisPh * M_PI / 180;
+..\User\CalculatesLocation.c(50): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      float angle2= (2 * angle3 + 15) * M_PI / 180;
+..\User\CalculatesLocation.c(63): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          {cosf((float)15 * M_PI / (float)180), 0, sinf((float)(15) * M_PI /(float) 180)},
+..\User\CalculatesLocation.c(63): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          {cosf((float)15 * M_PI / (float)180), 0, sinf((float)(15) * M_PI /(float) 180)},
+..\User\CalculatesLocation.c(65): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          {-sinf((float)(15) * M_PI / (float)180), 0, cosf((float)15 * M_PI / (float)180)}
+..\User\CalculatesLocation.c(65): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          {-sinf((float)(15) * M_PI / (float)180), 0, cosf((float)15 * M_PI / (float)180)}
+..\User\CalculatesLocation.c(128): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	 	ppp = atanf(x1_1_z / y1_1_z) * (float)180 / M_PI;
+..\User\CalculatesLocation.c(129): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      yyy = atanf(z1_1_z / sqrtf(y1_1_z * y1_1_z + x1_1_z * x1_1_z)) * (float)180 / M_PI;
+..\User\CalculatesLocation.c(160): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\CalculatesLocation.c: 14 warnings, 0 errors
+compiling main.c...
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\MotorOutputPosse.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\ELMOTEST.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\Comm1_Communication.h(27): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Read - give arg types
+  float FW_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(28): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Write - give arg types
+  void FW_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(29): warning:  #1295-D: Deprecated declaration FW_Data_Comm1_Com_Write - give arg types
+  void FW_Data_Comm1_Com_Write();
+..\User\Comm1_Communication.h(50): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Read - give arg types
+  float FY_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(51): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Write - give arg types
+  void FY_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(52): warning:  #1295-D: Deprecated declaration FY_Data_Comm1_Com_Write - give arg types
+  void FY_Data_Comm1_Com_Write();
+..\User\temperature.h(8): warning:  #1295-D: Deprecated declaration temperature_write - give arg types
+  void temperature_write();
+..\User\temperature.h(9): warning:  #1295-D: Deprecated declaration temperature_du - give arg types
+  int temperature_du();
+..\User\temperature.h(10): warning:  #1295-D: Deprecated declaration Current_write - give arg types
+  void Current_write();
+..\User\temperature.h(11): warning:  #1295-D: Deprecated declaration Current_du - give arg types
+  float Current_du();
+..\User\Receive_Send_Data.h(27): warning:  #1295-D: Deprecated declaration Receive_DBJsuidong_Read - give arg types
+  void Receive_DBJsuidong_Read();
+..\User\Receive_Send_Data.h(28): warning:  #1295-D: Deprecated declaration Receive_Deadscale_Suidong_GS - give arg types
+  void Receive_Deadscale_Suidong_GS();
+..\User\Receive_Send_Data.h(29): warning:  #1295-D: Deprecated declaration Receive_Suidong_GS - give arg types
+  void Receive_Suidong_GS();
+..\User\Receive_Send_Data.h(30): warning:  #1295-D: Deprecated declaration Send_SW_Data_Write - give arg types
+  void Send_SW_Data_Write();   //发给上位机数据 2022.8.16
+..\User\Receive_Send_Data.h(32): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\main.c(24): warning:  #1295-D: Deprecated declaration Read_Flash - give arg types
+  void Read_Flash();
+..\User\main.c(283): warning:  #177-D: variable "T"  was declared but never referenced
+  	union UintToArray T;
+..\User\main.c: 84 warnings, 0 errors
+compiling AngelCalculation.c...
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\AngelCalculation.c(55): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	Alpha = SpaceSetValueFY * kr * pi / 180;
+..\User\AngelCalculation.c(71): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q3[0][0] = cosf(pi / 2.0f);
+..\User\AngelCalculation.c(72): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q3[0][1] = sinf(pi / 2.0f);
+..\User\AngelCalculation.c(74): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q3[1][0] = -sinf(pi / 2.0f);
+..\User\AngelCalculation.c(75): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q3[1][1] = cosf(pi / 2.0f);
+..\User\AngelCalculation.c(81): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q4[0][0] = cosf(-Angle * pi / 180.0f);
+..\User\AngelCalculation.c(83): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q4[0][2] = -sinf(-Angle * pi / 180.0f);
+..\User\AngelCalculation.c(87): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q4[2][0] = sinf(-Angle * pi / 180.0f);
+..\User\AngelCalculation.c(89): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	q4[2][2] = cosf(-Angle * pi / 180.0f);
+..\User\AngelCalculation.c: 10 warnings, 0 errors
+compiling elmo.c...
+compiling aaa.c...
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\AttitudeAlgorithm.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\aaa.c(708): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					ScanAngleRang_ly = ScanAngleRang_ly * 0.5;//范围是正负走
+..\User\aaa.c(728): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					if((FW_Scan_Step_Float<0.1)||(FW_Scan_Step_Float>10))////方位扫描步长判断
+..\User\aaa.c(733): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					if((FY_Scan_Step_Float<0.1)||(FY_Scan_Step_Float>10))///俯仰扫描步长判断
+..\User\aaa.c(571): warning:  #177-D: variable "i"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(571): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(572): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;
+..\User\aaa.c(573): warning:  #177-D: variable "T"  was declared but never referenced
+  	union UintToArray T;///
+..\User\aaa.c(964): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(965): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(988): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(989): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(1042): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1043): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;
+..\User\aaa.c(1249): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1250): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(1405): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      FW_ScanStepLength =    (float)FW_Step_Angle * (0.001);        //方位每次步进角度
+..\User\aaa.c(1406): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      FY_ScanAngleRang  =    (float)FY_Step_Angle * (0.001);        //俯仰每次步进角度
+..\User\aaa.c(1535): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1536): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(1587): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1588): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;
+..\User\aaa.c(1640): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1641): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(1835): warning:  #177-D: variable "Sum2"  was declared but never referenced
+  	u8 i=0,Sum2=0;
+..\User\aaa.c(1836): warning:  #177-D: variable "Sum"  was declared but never referenced
+  	u32 Sum=0;	
+..\User\aaa.c(3128): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          Lattitude_f= (float)Lattitude_int*180.0/2147483646.0; //纬度
+..\User\aaa.c(3129): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				Longitude_f= (float)Longitude_int*180.0/2147483646.0;
+..\User\aaa.c(3130): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				Altitude_f = (float)Altitude_int*16382.0/2147483646.0;
+..\User\aaa.c: 82 warnings, 0 errors
+compiling GuanDaoZhuanHuan.c...
+..\User\GuanDaoZhuanHuan.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\GuanDaoZhuanHuan.c(61): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	y3 = FW_PianCha * pi / 180;
+..\User\GuanDaoZhuanHuan.c(62): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	p3 = FY_PianCha * pi / 180;
+..\User\GuanDaoZhuanHuan.c(63): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	r3 = HG_PianCha * pi / 180;
+..\User\GuanDaoZhuanHuan.c(65): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	r4 = roll_attitude_float_ly * pi /180.0;             //方位
+..\User\GuanDaoZhuanHuan.c(66): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	p4 = pitch_attitude_float_ly * pi /180.0;           //俯仰
+..\User\GuanDaoZhuanHuan.c(67): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	y4 = yaw_attitude_float_ly * pi /180.0;            //横滚
+..\User\GuanDaoZhuanHuan.c(136): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	r_change_later = r_change_before / pi * 180;        //横滚   单位度
+..\User\GuanDaoZhuanHuan.c(137): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	y_change_later = y_change_before / pi * 180;        //方位   单位度
+..\User\GuanDaoZhuanHuan.c(138): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	p_change_later = p_change_before / pi * 180;	       //俯仰   单位度
+..\User\GuanDaoZhuanHuan.c: 11 warnings, 0 errors
+compiling ioinit.c...
+..\User\ioinit.c(126): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		da_in1 = da_in1 + 10.0018034 + F_biaozhi1;      //	主伺服板 da_in1 = da_in1 - 0.056789;
+..\User\ioinit.c(127): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		ad1_out_int = da_in1 / 10.0 * 32767;
+..\User\ioinit.c(152): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		da_in2 = da_in2 + 9.99899483 + F_biaozhi2;    // 主伺服板 da_in2 = da_in2 - 0.095021;  俯仰电机
+..\User\ioinit.c(153): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		ad2_out_int = da_in2 / 10.0 * 32767;
+..\User\ioinit.c(199): warning:  #1-D: last line of file ends without a newline
+  //		addat = timer_cnt_1 * DA_step_k; 
+..\User\ioinit.c: 5 warnings, 0 errors
+compiling MotorOutputPosse.c...
+..\User\MotorOutputPosse.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\MotorOutputPosse.c: 1 warning, 0 errors
+compiling PointFunction.c...
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\AttitudeAlgorithm.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\Deg_InverseSolution.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\PointFunction.c(165): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\PointFunction.c: 16 warnings, 0 errors
+compiling PositionLoop.c...
+..\User\PositionLoop.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PositionLoop.c(529): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\PositionLoop.c: 2 warnings, 0 errors
+compiling stmflash.c...
+compiling ServoFunction.c...
+..\User\ServoFunction.c(100): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		miss_distance_X_float_to_angle = (miss_distance_X_float + miss_offset_X) * 29.5 * 0.000057295; //（脱靶量转换为度）
+..\User\ServoFunction.c(101): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		miss_distance_Y_float_to_angle = (miss_distance_Y_float + miss_offset_Y) * 77 * 0.000057295;;		//29.5 * 0.000057295
+..\User\ServoFunction.c(106): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		miss_distance_Y_float_to_angle = (miss_distance_Y_float + miss_offset_Y) * 77 * 0.000057295;;		//29.5 * 0.000057295
+..\User\ServoFunction.c(200): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_moni_mrad = FW_moni_miss * 17.5;
+..\User\ServoFunction.c(201): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_moni_mrad = FY_moni_miss * 17.5;
+..\User\ServoFunction.c(209): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_light_loop_revise = FW_light_loop_k * FW_miss_distance_error_lowpass / 10.0;   
+..\User\ServoFunction.c(214): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_miss_distance_error = FW_light_loop_k_1 * FW_miss_distance_error_lowpass / 10.0;   
+..\User\ServoFunction.c(220): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_miss_distance_error = FW_light_loop_k_2 * FW_miss_distance_error_lowpass / 10.0;   
+..\User\ServoFunction.c(232): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						FW_pi_w =  FW_pi_hz * 2.0 * 3.1415926;
+..\User\ServoFunction.c(233): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						FW_pi_tao = 1.0 / FW_pi_w;
+..\User\ServoFunction.c(235): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						FW_light_loop_revise = FW_pi_K * (FW_pi_tao * FW_miss_distance_error_lowpass + 0.01 * FW_miss_distance_error_lowpass_sum);      //0.01是采样时间
+..\User\ServoFunction.c(241): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_light_loop_revise = FW_light_loop_k * FW_miss_distance_error_lowpass / 10.0;  
+..\User\ServoFunction.c(246): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FW_miss_distance_error_lowpass_sum = FW_miss_distance_error_lowpass_sum + FW_miss_distance_error_lowpass * 0.01;	//0.01是采样时间
+..\User\ServoFunction.c(255): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_light_loop_revise = FY_light_loop_k * FY_miss_distance_error_lowpass / 10.0; 
+..\User\ServoFunction.c(259): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_miss_distance_error = FY_light_loop_k_1 * FY_miss_distance_error_lowpass / 10.0;     //脱靶量单位是度，DA输出是1V=10度/秒，统一单位
+..\User\ServoFunction.c(264): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_miss_distance_error = FY_light_loop_k_2 * FY_miss_distance_error_lowpass / 10.0;     //脱靶量单位是度，DA输出是1V=10度/秒，统一单位
+..\User\ServoFunction.c(276): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_pi_w =  FY_pi_hz * 2.0 * 3.1415926;
+..\User\ServoFunction.c(277): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_pi_tao = 1.0 / FY_pi_w;
+..\User\ServoFunction.c(279): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_light_loop_revise = FY_pi_K * (FY_pi_tao * FY_miss_distance_error_lowpass + 0.01 * FY_miss_distance_error_lowpass_sum);      //0.01是采样时间
+..\User\ServoFunction.c(285): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_light_loop_revise = FY_light_loop_k1 * FY_miss_distance_error_lowpass / 10.0; 
+..\User\ServoFunction.c(289): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_light_loop_revise = FY_light_loop_k * FY_miss_distance_error_lowpass / 10.0; 
+..\User\ServoFunction.c(296): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_light_loop_revise = FY_light_loop_k1 * FY_miss_distance_error_lowpass / 10.0; 
+..\User\ServoFunction.c(300): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							FY_miss_distance_error_lowpass_sum = FY_miss_distance_error_lowpass_sum + FY_miss_distance_error_lowpass * 0.001;	//0.01是采样时间,积分
+..\User\ServoFunction.c(350): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\ServoFunction.c: 24 warnings, 0 errors
+compiling ScanFunction.c...
+..\User\ScanFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\ScanFunction.c(72): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW + 0.001;
+..\User\ScanFunction.c(75): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWLY1)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWLY1)>-0.01))	
+..\User\ScanFunction.c(83): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW - 0.001;
+..\User\ScanFunction.c(86): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWLY1)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWLY1)>-0.01))	
+..\User\ScanFunction.c(93): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY + 0.001;
+..\User\ScanFunction.c(96): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYLY1)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYLY1)>-0.01))	
+..\User\ScanFunction.c(104): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY - 0.001;
+..\User\ScanFunction.c(107): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYLY1)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYLY1)>-0.01))		
+..\User\ScanFunction.c: 10 warnings, 0 errors
+compiling stm32f4xx_it.c...
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\stm32f4xx_it.c(431): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                  PX_fy = PX_fy / 186413.0;		
+..\User\stm32f4xx_it.c(437): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				PY_fy = PY_fw / 186413.0;
+..\User\stm32f4xx_it.c(570): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                  PX_fw = PX_fw / 186413.6;		//186413.6
+..\User\stm32f4xx_it.c(576): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				PY_fw = PY_fw / 186413.0;
+..\User\stm32f4xx_it.c: 57 warnings, 0 errors
+compiling TestFunction.c...
+..\User\TestFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\AttitudeAlgorithm.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PositionLoop.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\MotorOutputPosse.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\TestFunction.c(156): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FW_rms_ave = FW_rms_sum * 0.025;//40个点                //编码器误差求均值
+..\User\TestFunction.c(157): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FW_actual_rms_ave = FW_actual_rms_sum * 0.025;  //前置滤波前编码器误差求均值
+..\User\TestFunction.c(184): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	    FW_rms_ave = FW_rms_sum * 0.025;
+..\User\TestFunction.c(185): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FW_actual_rms_ave = FW_actual_rms_sum * 0.025;
+..\User\TestFunction.c(304): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	X_slave_1ms_distance_sum1_2 = X_slave_1ms_distance_sum * 0.5;
+..\User\TestFunction.c(322): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\TestFunction.c: 22 warnings, 0 errors
+compiling TestScan.c...
+..\User\TestScan.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\TestScan.c(102): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\TestScan.c: 55 warnings, 0 errors
+compiling FY_485.c...
+..\User\FY_485.c(123): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			FY_485_encoder_degrees = FY_485_encoder_float * 0.0054932;
+..\User\FY_485.c(132): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\FY_485.c: 2 warnings, 0 errors
+compiling YunSuFunction.c...
+..\User\YunSuFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\YunSuFunction.c(69): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW + 0.001;
+..\User\YunSuFunction.c(72): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWYunSu)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWYunSu)>-0.01))	
+..\User\YunSuFunction.c(80): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFW = SpaceSetValueFW - 0.001;
+..\User\YunSuFunction.c(83): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFW - KongJianZhiXiang_FWYunSu)<0.01)&&((SpaceSetValueFW - KongJianZhiXiang_FWYunSu)>-0.01))	
+..\User\YunSuFunction.c(90): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY + 0.001;
+..\User\YunSuFunction.c(93): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYYunSu)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYYunSu)>-0.01))	
+..\User\YunSuFunction.c(101): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			SpaceSetValueFY = SpaceSetValueFY - 0.001;
+..\User\YunSuFunction.c(104): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if(((SpaceSetValueFY - KongJianZhiXiang_FYYunSu)<0.01)&&((SpaceSetValueFY - KongJianZhiXiang_FYYunSu)>-0.01))		
+..\User\YunSuFunction.c(402): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\YunSuFunction.c: 11 warnings, 0 errors
+compiling AHRS_100A.c...
+..\User\AHRS_100A.c(97): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			X_slave_1ms_distance = Gyro.Gyro_Y * 0.001; //* (-0.001);             //镜子在1ms内走的路程，取反
+..\User\AHRS_100A.c: 1 warning, 0 errors
+compiling timer.c...
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\PositionLoop.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\MotorOutputPosse.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\AttitudeAlgorithm.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\TestFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\ScanFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\TestScan.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\YunSuFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\EXIT.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\CalculatesLocation.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\GuanDaoZhuanHuan.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\Camera_Config.h(29): warning:  #1295-D: Deprecated declaration Restore_Factory_Settings - give arg types
+  void Restore_Factory_Settings();
+..\User\Camera_Config.h(30): warning:  #1295-D: Deprecated declaration Save_Configuration_Settings - give arg types
+  void Save_Configuration_Settings();
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\Comm1_Communication.h(27): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Read - give arg types
+  float FW_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(28): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Write - give arg types
+  void FW_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(29): warning:  #1295-D: Deprecated declaration FW_Data_Comm1_Com_Write - give arg types
+  void FW_Data_Comm1_Com_Write();
+..\User\Comm1_Communication.h(50): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Read - give arg types
+  float FY_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(51): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Write - give arg types
+  void FY_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(52): warning:  #1295-D: Deprecated declaration FY_Data_Comm1_Com_Write - give arg types
+  void FY_Data_Comm1_Com_Write();
+..\User\temperature.h(8): warning:  #1295-D: Deprecated declaration temperature_write - give arg types
+  void temperature_write();
+..\User\temperature.h(9): warning:  #1295-D: Deprecated declaration temperature_du - give arg types
+  int temperature_du();
+..\User\temperature.h(10): warning:  #1295-D: Deprecated declaration Current_write - give arg types
+  void Current_write();
+..\User\temperature.h(11): warning:  #1295-D: Deprecated declaration Current_du - give arg types
+  float Current_du();
+..\User\Receive_Send_Data.h(27): warning:  #1295-D: Deprecated declaration Receive_DBJsuidong_Read - give arg types
+  void Receive_DBJsuidong_Read();
+..\User\Receive_Send_Data.h(28): warning:  #1295-D: Deprecated declaration Receive_Deadscale_Suidong_GS - give arg types
+  void Receive_Deadscale_Suidong_GS();
+..\User\Receive_Send_Data.h(29): warning:  #1295-D: Deprecated declaration Receive_Suidong_GS - give arg types
+  void Receive_Suidong_GS();
+..\User\Receive_Send_Data.h(30): warning:  #1295-D: Deprecated declaration Send_SW_Data_Write - give arg types
+  void Send_SW_Data_Write();   //发给上位机数据 2022.8.16
+..\User\Receive_Send_Data.h(32): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\Deg_InverseSolution.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\WriteGuanDao.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\timer.c(1163): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		X=CalculateRMS_1(Final)*29.5;
+..\User\timer.c(1164): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		Y=CalculateRMS_2(Final2)*29.5;
+..\User\timer.c(1165): warning:  #940-D: missing return statement at end of non-void function "RMS2_vol" 
+  }
+..\User\timer.c(1162): warning:  #550-D: variable "X"  was set but never used
+  		float X=0.0,Y=0.0;
+..\User\timer.c(1162): warning:  #550-D: variable "Y"  was set but never used
+  		float X=0.0,Y=0.0;
+..\User\timer.c(1170): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		X=CalculateRMS_1(Final)*29.5;
+..\User\timer.c(1177): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		Y=CalculateRMS_2(Final2)*29.5;
+..\User\timer.c(1590): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					if((FY_encoder_degrees >= 81.5)&&(FY_encoder_degrees <= 82.5))
+..\User\timer.c(1590): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					if((FY_encoder_degrees >= 81.5)&&(FY_encoder_degrees <= 82.5))
+..\User\timer.c(1592): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							if((FW_encoder_degrees >= 337.00)&&(FW_encoder_degrees <= 338.00))   //201.195     201.205
+..\User\timer.c(1592): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  							if((FW_encoder_degrees >= 337.00)&&(FW_encoder_degrees <= 338.00))   //201.195     201.205
+..\User\timer.c(1695): warning:  #177-D: variable "PI"  was declared but never referenced
+  					float PI=3.1415926;
+..\User\timer.c(1738): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					x_axis_velocity_1msdistance = x_axis_velocity_float * 0.001;
+..\User\timer.c(1740): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					y_axis_velocity_1msdistance = gs_x_k*y_axis_velocity_float * 0.001;
+..\User\timer.c(1742): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		      z_axis_velocity_1msdistance = z_axis_velocity_float * 0.001;
+..\User\timer.c(1766): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					miss_distance_X_float_sum = miss_distance_X_float_sum + miss_distance_X_float* 16.5 * 0.000057295;
+..\User\timer.c(1767): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					miss_distance_Y_float_sum = miss_distance_Y_float_sum + miss_distance_Y_float* 16.5 * 0.000057295;
+..\User\timer.c(1856): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					x_axis_velocity_1msdistance = x_axis_velocity_float * 0.001;
+..\User\timer.c(1859): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  					y_axis_velocity_1msdistance = y_axis_velocity_float * 0.001;
+..\User\timer.c(1862): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		      z_axis_velocity_1msdistance = z_axis_velocity_float * 0.001;
+..\User\timer.c(1310): warning:  #177-D: variable "i"  was declared but never referenced
+  		uint32_t i = 0;
+..\User\timer.c(2070): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			if(FY_Difference > -180.0 && FY_Difference < 180.0)
+..\User\timer.c(2078): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			else if(FY_Difference >= 180.0)
+..\User\timer.c(2134): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			if(FW_Difference > -180.0 && FW_Difference < 180.0)
+..\User\timer.c(2142): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  			else if(FW_Difference >= 180.0)
+..\User\timer.c(2423): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						miss_distance_X_float_to_angle = miss_distance_X_float * 73.5 * 0.000057295; //（脱靶量转换为度）//14
+..\User\timer.c(2429): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						miss_distance_Y_float_to_angle = miss_distance_Y_float * 73.5 * 0.000057295;
+..\User\timer.c(2595): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  						z_axis_velocity_float = (float)z_int * 0.0001;															//SpeedZ
+..\User\timer.c(2520): warning:  #177-D: variable "usart_2_num"  was declared but never referenced
+  		unsigned char usart_2_num = 0;
+..\User\timer.c(3258): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	accelerate_limit_1ms = accelerate_limit * 0.001;
+..\User\timer.c(3633): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      DianLiu_1 = (int)(DianLiu_FW/0.5);
+..\User\timer.c(3634): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	DianLiu_2 = (int)(DianLiu_FY/0.5);
+..\User\timer.c: 130 warnings, 0 errors
+compiling ASCII.c...
+..\User\ASCII.c(8): warning:  #186-D: pointless comparison of unsigned integer with zero
+  	if((bHex>=0)&&(bHex<=9))
+..\User\ASCII.c: 1 warning, 0 errors
+compiling Camera_Config.c...
+..\User\Camera_Config.h(29): warning:  #1295-D: Deprecated declaration Restore_Factory_Settings - give arg types
+  void Restore_Factory_Settings();
+..\User\Camera_Config.h(30): warning:  #1295-D: Deprecated declaration Save_Configuration_Settings - give arg types
+  void Save_Configuration_Settings();
+..\User\Camera_Config.c(21): warning:  #177-D: variable "Check"  was declared but never referenced
+  	u8 Check=0;
+..\User\Camera_Config.c: 3 warnings, 0 errors
+compiling RMS.c...
+compiling RMS2.c...
+compiling PC_Communication.c...
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\Camera_Config.h(29): warning:  #1295-D: Deprecated declaration Restore_Factory_Settings - give arg types
+  void Restore_Factory_Settings();
+..\User\Camera_Config.h(30): warning:  #1295-D: Deprecated declaration Save_Configuration_Settings - give arg types
+  void Save_Configuration_Settings();
+..\User\PC_Communication.c(386): warning:  #177-D: variable "PC_ADDR_tmp"  was declared but never referenced
+  	u32 PC_ADDR_tmp;
+..\User\PC_Communication.c: 6 warnings, 0 errors
+assembling startup_stm32f4xx.s...
+compiling SaoMiao.c...
+..\User\SaoMiao.c(117): warning:  #940-D: missing return statement at end of non-void function "SaoMiao_Init" 
+  }	
+..\User\SaoMiao.c: 1 warning, 0 errors
+compiling temperature.c...
+..\User\temperature.h(8): warning:  #1295-D: Deprecated declaration temperature_write - give arg types
+  void temperature_write();
+..\User\temperature.h(9): warning:  #1295-D: Deprecated declaration temperature_du - give arg types
+  int temperature_du();
+..\User\temperature.h(10): warning:  #1295-D: Deprecated declaration Current_write - give arg types
+  void Current_write();
+..\User\temperature.h(11): warning:  #1295-D: Deprecated declaration Current_du - give arg types
+  float Current_du();
+..\User\Comm1_Communication.h(27): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Read - give arg types
+  float FW_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(28): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Write - give arg types
+  void FW_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(29): warning:  #1295-D: Deprecated declaration FW_Data_Comm1_Com_Write - give arg types
+  void FW_Data_Comm1_Com_Write();
+..\User\Comm1_Communication.h(50): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Read - give arg types
+  float FY_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(51): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Write - give arg types
+  void FY_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(52): warning:  #1295-D: Deprecated declaration FY_Data_Comm1_Com_Write - give arg types
+  void FY_Data_Comm1_Com_Write();
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\Camera_Config.h(29): warning:  #1295-D: Deprecated declaration Restore_Factory_Settings - give arg types
+  void Restore_Factory_Settings();
+..\User\Camera_Config.h(30): warning:  #1295-D: Deprecated declaration Save_Configuration_Settings - give arg types
+  void Save_Configuration_Settings();
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\temperature.c(79): warning:  #1-D: last line of file ends without a newline
+  //}
+..\User\temperature.c: 31 warnings, 0 errors
+compiling usart.c...
+compiling Comm1_Communication.c...
+..\User\Comm1_Communication.h(27): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Read - give arg types
+  float FW_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(28): warning:  #1295-D: Deprecated declaration FW_temperature_Comm1_Com_Write - give arg types
+  void FW_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(29): warning:  #1295-D: Deprecated declaration FW_Data_Comm1_Com_Write - give arg types
+  void FW_Data_Comm1_Com_Write();
+..\User\Comm1_Communication.h(50): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Read - give arg types
+  float FY_temperature_Comm1_Com_Read();
+..\User\Comm1_Communication.h(51): warning:  #1295-D: Deprecated declaration FY_temperature_Comm1_Com_Write - give arg types
+  void FY_temperature_Comm1_Com_Write();
+..\User\Comm1_Communication.h(52): warning:  #1295-D: Deprecated declaration FY_Data_Comm1_Com_Write - give arg types
+  void FY_Data_Comm1_Com_Write();
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\Camera_Config.h(29): warning:  #1295-D: Deprecated declaration Restore_Factory_Settings - give arg types
+  void Restore_Factory_Settings();
+..\User\Camera_Config.h(30): warning:  #1295-D: Deprecated declaration Save_Configuration_Settings - give arg types
+  void Save_Configuration_Settings();
+..\User\timer.h(23): warning:  #1295-D: Deprecated declaration TIM2_config - give arg types
+  void TIM2_config();
+..\User\timer.h(47): warning:  #1295-D: Deprecated declaration read_jishangguandao - give arg types
+  void read_jishangguandao(); 
+..\User\timer.h(57): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\timer.h(58): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\timer.h(59): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\timer.h(60): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\timer.h(61): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\timer.h(62): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\timer.h(63): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\timer.h(64): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\timer.h(65): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\timer.h(66): warning:  #1295-D: Deprecated declaration BuJinSaoMiao - give arg types
+  void BuJinSaoMiao();
+..\User\PC_Communication.h(12): warning:  #1295-D: Deprecated declaration PC_Com_Read - give arg types
+  void PC_Com_Read();
+..\User\PC_Communication.h(13): warning:  #1295-D: Deprecated declaration PC_Data_TX - give arg types
+  void PC_Data_TX();
+..\User\PC_Communication.h(14): warning:  #1295-D: Deprecated declaration PC_Com_Write - give arg types
+  void PC_Com_Write();
+..\User\temperature.h(8): warning:  #1295-D: Deprecated declaration temperature_write - give arg types
+  void temperature_write();
+..\User\temperature.h(9): warning:  #1295-D: Deprecated declaration temperature_du - give arg types
+  int temperature_du();
+..\User\temperature.h(10): warning:  #1295-D: Deprecated declaration Current_write - give arg types
+  void Current_write();
+..\User\temperature.h(11): warning:  #1295-D: Deprecated declaration Current_du - give arg types
+  float Current_du();
+..\User\Comm1_Communication.c(2331): warning:  #940-D: missing return statement at end of non-void function "Elmo_Write_Data" 
+  }
+..\User\Comm1_Communication.c(2374): warning:  #1-D: last line of file ends without a newline
+  */
+..\User\Comm1_Communication.c: 32 warnings, 0 errors
+compiling Receive_Send_Data.c...
+..\User\Receive_Send_Data.h(27): warning:  #1295-D: Deprecated declaration Receive_DBJsuidong_Read - give arg types
+  void Receive_DBJsuidong_Read();
+..\User\Receive_Send_Data.h(28): warning:  #1295-D: Deprecated declaration Receive_Deadscale_Suidong_GS - give arg types
+  void Receive_Deadscale_Suidong_GS();
+..\User\Receive_Send_Data.h(29): warning:  #1295-D: Deprecated declaration Receive_Suidong_GS - give arg types
+  void Receive_Suidong_GS();
+..\User\Receive_Send_Data.h(30): warning:  #1295-D: Deprecated declaration Send_SW_Data_Write - give arg types
+  void Send_SW_Data_Write();   //发给上位机数据 2022.8.16
+..\User\Receive_Send_Data.h(32): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\Receive_Send_Data.c(332): warning:  #175-D: subscript out of range
+  		Receive_XunHuan_Ma_low = Receive_Data[31];					//循环码
+..\User\Receive_Send_Data.c(333): warning:  #175-D: subscript out of range
+  		Receive_XunHuan_Ma_high = Receive_Data[32];
+..\User\Receive_Send_Data.c(698): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FW_Jixia_tuoba_degrees = MissKx*miss_distance_X_float*100*15.7;
+..\User\Receive_Send_Data.c(706): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FY_Jixia_tuoba_degrees = MissKy*miss_distance_Y_float*100*15.7;
+..\User\Receive_Send_Data.c(750): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	Temp_32_Receive.Receive_Data_float = miss_distance_X_float * 15.7;
+..\User\Receive_Send_Data.c(757): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	Temp_32_Receive.Receive_Data_float = miss_distance_Y_float * 15.7;
+..\User\Receive_Send_Data.c(745): warning:  #177-D: variable "Temp_Uchar"  was declared but never referenced
+  	unsigned char Temp_Uchar = 0;
+..\User\Receive_Send_Data.c(1100): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FW_Jixia_tuoba_degrees = MissKx*miss_distance_X_float*15.7;
+..\User\Receive_Send_Data.c(1108): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		FY_Jixia_tuoba_degrees = MissKy*miss_distance_Y_float*15.7;
+..\User\Receive_Send_Data.c(1187): warning:  #177-D: variable "Receive_ADDR_tmp"  was declared but never referenced
+  	u32 Receive_ADDR_tmp;
+..\User\Receive_Send_Data.c(1346): warning:  #1-D: last line of file ends without a newline
+  }			
+..\User\Receive_Send_Data.c: 16 warnings, 0 errors
+compiling WriteGuanDao.c...
+..\User\WriteGuanDao.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\aaa.h(7): warning:  #1295-D: Deprecated declaration AA_Com_Read - give arg types
+  void AA_Com_Read();
+..\User\aaa.h(8): warning:  #1295-D: Deprecated declaration AA_Com_Write - give arg types
+  void AA_Com_Write();
+..\User\aaa.h(12): warning:  #1295-D: Deprecated declaration read_JingGenZong_Data - give arg types
+  void read_JingGenZong_Data();
+..\User\aaa.h(13): warning:  #1295-D: Deprecated declaration JiaoYan_Read_Data - give arg types
+  void JiaoYan_Read_Data();
+..\User\aaa.h(14): warning:  #1295-D: Deprecated declaration DaBao_Send_Data - give arg types
+  void DaBao_Send_Data();
+..\User\aaa.h(15): warning:  #1295-D: Deprecated declaration write_JingGenZong_Data - give arg types
+  void write_JingGenZong_Data();
+..\User\aaa.h(16): warning:  #1295-D: Deprecated declaration AB_TX - give arg types
+  void AB_TX();
+..\User\aaa.h(17): warning:  #1295-D: Deprecated declaration AB_DATA_RX - give arg types
+  void AB_DATA_RX();
+..\User\aaa.h(18): warning:  #1295-D: Deprecated declaration AB_Com_Read - give arg types
+  void AB_Com_Read();  
+..\User\aaa.h(40): warning:  #1295-D: Deprecated declaration self_check - give arg types
+  void self_check();                 //自检
+..\User\aaa.h(41): warning:  #1295-D: Deprecated declaration parameter_record - give arg types
+  void parameter_record();           //参数装订
+..\User\aaa.h(42): warning:  #1295-D: Deprecated declaration parameter_record_error - give arg types
+  void parameter_record_error();     //参数装订错误
+..\User\aaa.h(43): warning:  #1295-D: Deprecated declaration state_inquiry - give arg types
+  void state_inquiry();              //状态查询
+..\User\aaa.h(44): warning:  #1295-D: Deprecated declaration start_point_to - give arg types
+  void start_point_to();             //启动指向
+..\User\aaa.h(45): warning:  #1295-D: Deprecated declaration start_point_to_error - give arg types
+  void start_point_to_error();       //启动指向错误
+..\User\aaa.h(46): warning:  #1295-D: Deprecated declaration start_step_scan - give arg types
+  void start_step_scan();            //启动步进扫描
+..\User\aaa.h(47): warning:  #1295-D: Deprecated declaration start_step_scan_error - give arg types
+  void start_step_scan_error();      //启动步进扫描错误
+..\User\aaa.h(48): warning:  #1295-D: Deprecated declaration start_track - give arg types
+  void start_track();                //启动跟踪
+..\User\aaa.h(49): warning:  #1295-D: Deprecated declaration start_track_error - give arg types
+  void start_track_error();          //启动跟踪错误
+..\User\aaa.h(50): warning:  #1295-D: Deprecated declaration start_constantspeed_scan - give arg types
+  void start_constantspeed_scan();   //启动匀速扫描
+..\User\aaa.h(51): warning:  #1295-D: Deprecated declaration start_constantspeed_scan_error - give arg types
+  void start_constantspeed_scan_error();  //启动匀速扫描错误
+..\User\aaa.h(52): warning:  #1295-D: Deprecated declaration make_zero - give arg types
+  void make_zero();                  //归零
+..\User\aaa.h(53): warning:  #1295-D: Deprecated declaration make_zero_error - give arg types
+  void make_zero_error();            //归零错误
+..\User\aaa.h(54): warning:  #1295-D: Deprecated declaration scram_button - give arg types
+  void scram_button();               //急停
+..\User\aaa.h(55): warning:  #1295-D: Deprecated declaration driver_setting - give arg types
+  void driver_setting();             //驱动设置
+..\User\aaa.h(56): warning:  #1295-D: Deprecated declaration driver_set_error - give arg types
+  void driver_set_error();           //驱动设置错误
+..\User\aaa.h(57): warning:  #1295-D: Deprecated declaration navigation_set - give arg types
+  void navigation_set();             //惯导设置
+..\User\aaa.h(58): warning:  #1295-D: Deprecated declaration navigation_set_error - give arg types
+  void navigation_set_error();       //惯导设置错误
+..\User\aaa.h(59): warning:  #1295-D: Deprecated declaration collecte_command - give arg types
+  void collecte_command();           //采集命令
+..\User\aaa.h(60): warning:  #1295-D: Deprecated declaration collecte_command_error - give arg types
+  void collecte_command_error();     //采集命令错误
+..\User\aaa.h(61): warning:  #1295-D: Deprecated declaration check_the_time - give arg types
+  void check_the_time();             //对时
+..\User\aaa.h(62): warning:  #1295-D: Deprecated declaration communication_test - give arg types
+  void communication_test();         //通信测试
+..\User\aaa.h(63): warning:  #1295-D: Deprecated declaration communication_test_error - give arg types
+  void communication_test_error();   //通信测试错误
+..\User\aaa.h(64): warning:  #1295-D: Deprecated declaration switch_default - give arg types
+  void switch_default();             //switch其它
+..\User\aaa.h(66): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge - give arg types
+  void scan_FW_degree_judge();
+..\User\aaa.h(67): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge - give arg types
+  void scan_FY_degree_judge();
+..\User\aaa.h(68): warning:  #1295-D: Deprecated declaration scan_FW_step_judge - give arg types
+  void scan_FW_step_judge();
+..\User\aaa.h(69): warning:  #1295-D: Deprecated declaration scan_FY_step_judge - give arg types
+  void scan_FY_step_judge();
+..\User\aaa.h(70): warning:  #1295-D: Deprecated declaration scan_speed - give arg types
+  void scan_speed();
+..\User\aaa.h(71): warning:  #1295-D: Deprecated declaration work_mode_change_error - give arg types
+  void work_mode_change_error();
+..\User\aaa.h(72): warning:  #1295-D: Deprecated declaration work_mode_change_ack - give arg types
+  void work_mode_change_ack();
+..\User\aaa.h(73): warning:  #1295-D: Deprecated declaration scan_FY_degree_judge_1 - give arg types
+  void scan_FY_degree_judge_1();
+..\User\aaa.h(74): warning:  #1295-D: Deprecated declaration scan_FW_degree_judge_1 - give arg types
+  void scan_FW_degree_judge_1();
+..\User\aaa.h(75): warning:  #1295-D: Deprecated declaration ZiJian_YingDa - give arg types
+  void ZiJian_YingDa();
+..\User\aaa.h(76): warning:  #1295-D: Deprecated declaration CaiJiMingLing_YingDa - give arg types
+  void CaiJiMingLing_YingDa();
+..\User\aaa.h(77): warning:  #1295-D: Deprecated declaration ZhuangTaiChaXun_YingDa - give arg types
+  void ZhuangTaiChaXun_YingDa();
+..\User\aaa.h(78): warning:  #1295-D: Deprecated declaration ZhiXiang_YingDa - give arg types
+  void ZhiXiang_YingDa();
+..\User\aaa.h(79): warning:  #1295-D: Deprecated declaration BuJinSaoMiao_YingDa - give arg types
+  void BuJinSaoMiao_YingDa();
+..\User\aaa.h(80): warning:  #1295-D: Deprecated declaration GenZong_YingDa - give arg types
+  void GenZong_YingDa();
+..\User\aaa.h(81): warning:  #1295-D: Deprecated declaration YunSuSaoMiao_YingDa - give arg types
+  void YunSuSaoMiao_YingDa();
+..\User\aaa.h(82): warning:  #1295-D: Deprecated declaration HuiLing_YingDa - give arg types
+  void HuiLing_YingDa();
+..\User\aaa.h(83): warning:  #1295-D: Deprecated declaration JiTing_YingDa - give arg types
+  void JiTing_YingDa();
+..\User\aaa.h(86): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\WriteGuanDao.c(130): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\WriteGuanDao.c: 55 warnings, 0 errors
+compiling misc.c...
+compiling Deg_InverseSolution.c...
+..\User\Receive_Send_Data.h(27): warning:  #1295-D: Deprecated declaration Receive_DBJsuidong_Read - give arg types
+  void Receive_DBJsuidong_Read();
+..\User\Receive_Send_Data.h(28): warning:  #1295-D: Deprecated declaration Receive_Deadscale_Suidong_GS - give arg types
+  void Receive_Deadscale_Suidong_GS();
+..\User\Receive_Send_Data.h(29): warning:  #1295-D: Deprecated declaration Receive_Suidong_GS - give arg types
+  void Receive_Suidong_GS();
+..\User\Receive_Send_Data.h(30): warning:  #1295-D: Deprecated declaration Send_SW_Data_Write - give arg types
+  void Send_SW_Data_Write();   //发给上位机数据 2022.8.16
+..\User\Receive_Send_Data.h(32): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\Deg_InverseSolution.h(14): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\User\PointFunction.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif 
+..\User\Deg_InverseSolution.c(53): warning:  #177-D: variable "turn1"  was declared but never referenced
+  	double turn1,turn2,turn3,turn4;
+..\User\Deg_InverseSolution.c(53): warning:  #177-D: variable "turn2"  was declared but never referenced
+  	double turn1,turn2,turn3,turn4;
+..\User\Deg_InverseSolution.c(53): warning:  #177-D: variable "turn3"  was declared but never referenced
+  	double turn1,turn2,turn3,turn4;
+..\User\Deg_InverseSolution.c(53): warning:  #177-D: variable "turn4"  was declared but never referenced
+  	double turn1,turn2,turn3,turn4;
+..\User\Deg_InverseSolution.c(214): warning:  #1-D: last line of file ends without a newline
+  }
+..\User\Deg_InverseSolution.c: 12 warnings, 0 errors
+compiling stm32f4xx_adc.c...
+compiling stm32f4xx_can.c...
+compiling stm32f4xx_cryp_des.c...
+compiling stm32f4xx_cryp_tdes.c...
+compiling stm32f4xx_crc.c...
+compiling stm32f4xx_dbgmcu.c...
+compiling stm32f4xx_dac.c...
+compiling stm32f4xx_cryp.c...
+compiling stm32f4xx_dcmi.c...
+compiling stm32f4xx_cryp_aes.c...
+compiling stm32f4xx_dma.c...
+compiling stm32f4xx_exti.c...
+compiling stm32f4xx_flash.c...
+compiling stm32f4xx_gpio.c...
+compiling stm32f4xx_fsmc.c...
+compiling stm32f4xx_hash.c...
+compiling stm32f4xx_hash_md5.c...
+compiling stm32f4xx_iwdg.c...
+compiling stm32f4xx_rng.c...
+compiling stm32f4xx_hash_sha1.c...
+compiling stm32f4xx_i2c.c...
+compiling stm32f4xx_pwr.c...
+compiling stm32f4xx_rcc.c...
+compiling StepSingle.c...
+compiling stm32f4xx_sdio.c...
+compiling stm32f4xx_spi.c...
+compiling stm32f4xx_syscfg.c...
+compiling stm32f4xx_rtc.c...
+compiling stm32f4xx_wwdg.c...
+compiling stm32f4xx_usart.c...
+compiling stm32f4xx_tim.c...
+compiling system_stm32f4xx.c...
+linking...
+Program Size: Code=106272 RO-data=744 RW-data=5320 ZI-data=50072  
+FromELF: creating hex file...
+".\Objects\SweepFrequency.axf" - 0 Error(s), 793 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.STM32F4xx_DFP.2.15.0.pack
+                Keil.STM32F4xx_DFP.2.15.0
+                STMicroelectronics STM32F4 Series Device Support, Drivers and Examples
+
+<h2>Collection of Component include folders:</h2>
+  C:\Users\ZJF\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.15.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
+
+<h2>Collection of Component Files used:</h2>
+Build Time Elapsed:  00:00:05
+</pre>
+</body>
+</html>

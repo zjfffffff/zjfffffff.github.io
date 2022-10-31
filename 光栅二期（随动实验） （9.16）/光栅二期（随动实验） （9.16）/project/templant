@@ -1,0 +1,5218 @@
+#include "timer.h"
+#include "PositionLoop.h"
+#include "MotorOutputPosse.h"
+#include "stm32f4xx.h"	
+#include "FSMC.h"	
+#include "FsmCompensator.h"
+#include "FsmCompensator_servo.h"
+#include "can.h"
+#include "elmo.h"
+#include "ioinit.h"
+#include "math.h"
+#include "aaa.h"
+#include "stmflash.h"
+#include "AttitudeAlgorithm.h"
+#include "PointFunction.h"
+#include "ServoFunction.h"
+#include "TestFunction.h"
+#include "ScanFunction.h"
+#include "TestScan.h"
+#include "YunSuFunction.h"
+#include "EXIT.h"
+#include <CalculatesLocation.h>
+#include "GuanDaoZhuanHuan.h"
+#include "AngelCalculation.h"
+#include "DyConvertCoordinate1.h"
+#include "FY_485.h"
+#include "AHRS_100A.h"
+#include "Camera_Config.h"
+#include "PC_Communication.h"
+#include "Comm1_Communication.h"
+#include "RMS2.h"
+#include "SaoMiao.h"
+
+//环形走位变量设置
+#define n_LYJ 285
+u16 counter1=0;
+u16 counter2=0;
+u16 counter_data=1;
+u16 counter_j=0;	
+float ab[n_LYJ][2]={{0,0}};
+float FW_zero_degree1_fu=0 ;
+float FY_zero_degree1_zheng=0;
+
+
+
+
+//自己定义求RMS2微弧度
+float RMS2_weihudu_X=0.0;
+float RMS2_weihudu_Y=0.0;
+
+float RMS2_bianmaqi_X=0.0;
+float RMS2_bianmaqi_Y=0.0;
+
+#define RETURN_ZERO_MODE 3  								 //回零模式
+#define POINT_MODE 4         								//指向模式
+#define Time_Di_16         			    ((u32)(0x6400E100))
+#define Time_Gao_16         				((u32)(0x6400e200))
+#define FPGADataUpdateFlag              ((u32)(0x6400F000))//数据更新状态使能
+
+/*********************************************************************↓全局变量↓**************************************************************/
+u8 JingGenZong_Err = 0;                           //与精跟踪板通信变量;
+u8 JingGenZong_Flag = 0;                          //与精跟踪板通信变量;
+u8 FW_light_para = 0;                             //方位光闭环校正选择模式;
+u8 FY_light_para = 0;                             //俯仰光闭环校正选择模式;
+u8 stabilize_type_select = 0;                     // = 1目标为惯导， = 2目标为数引;
+u8 stabilize_axis_select = 0;                     // = 1 俯仰稳定，  = 2 方位稳定， = 3 共同稳定;
+u8 FY_location_para = 0;
+u8 FW_location_para = 0;
+u8 FY_location_para_set = 1;
+u8 FW_location_para_set = 1;
+float FW_pre_lvbo = 20;    						  //阶跃前置滤波
+float FY_pre_lvbo = 20;
+float FW_lowpass = 80;     						  //1ms位置闭环——速度环低通滤波☆
+float FY_lowpass = 80;
+
+/*********************************************************************↓全局变量END↓**************************************************************/
+
+
+
+
+/*********************************************************************↓外部调用变量↓**************************************************************/
+extern int32_t MF_fy,EE1_fy,MF_fw,EE1_fw;
+extern float NewAngle;
+
+
+
+
+
+/*********************************************************************↓外部调用变量END↓**************************************************************/
+float FW_wending_qiankui_lvbo = 2;   //位置闭环前馈滤波☆
+float FY_wending_qiankui_lvbo = 2;
+
+float FW_track_qiankui_lvbo = 2;     //光闭环跟踪前馈滤波★
+float FY_track_qiankui_lvbo = 2;
+
+float FW_wending_yijie_tao = 1;      //位置闭环的一阶校正 
+float FW_wending_yijie_T = 0.2;	
+float FY_wending_yijie_tao = 1;
+float FY_wending_yijie_T = 0.2;	
+
+float FW_wending_erjie_tao = 0.4;    //位置闭环的一阶校正 
+float FW_wending_erjie_T = 0.2;
+float FY_wending_erjie_tao = 0.4;
+float FY_wending_erjie_T = 0.2;
+
+float FW_lowpass_servo = 80;           //10ms光闭环——速度环低通滤波★
+float FY_lowpass_servo = 80;
+
+float FW_track_yijie_tao_servo = 1;    //10ms光闭环一阶★ 
+float FW_track_yijie_T_servo = 0.2;
+float FY_track_yijie_tao_servo = 1;
+float FY_track_yijie_T_servo = 0.2;
+	
+float FW_track_erjie_tao_servo = 1;    //10ms光闭环二阶★ 
+float FW_track_erjie_T_servo = 0.2;
+float FY_track_erjie_tao_servo = 1;
+float FY_track_erjie_T_servo = 0.2;
+
+
+float accelerate_limit = 1000;
+float velocity_limit_value_set = 10;
+
+//校正参数
+extern float X0_fsmT1;     //阶跃前置滤波
+extern float Y0_fsmT1;
+
+extern float X1_fsmT1;     //速度环低通滤波
+extern float Y1_fsmT1;
+
+extern float X2_fsmT1;     //稳定前馈滤波
+extern float Y2_fsmT1;
+
+extern float X4_fsmT1;     //跟踪前馈滤波
+extern float Y4_fsmT1;
+
+extern float X5_fsmTao1;   //稳定的一阶校正
+extern float X5_fsmT1;
+extern float Y5_fsmTao1;      
+extern float Y5_fsmT1;     
+
+extern float X3_fsmTao1;   //稳定的二阶校正
+extern float X3_fsmTao2;
+extern float X3_fsmT1;
+extern float X3_fsmT2;
+extern float Y3_fsmTao1;
+extern float Y3_fsmTao2;
+extern float Y3_fsmT1;
+extern float Y3_fsmT2;
+
+extern float X1_fsmT1_servo;     //10MS速度环低通滤波
+extern float Y1_fsmT1_servo;
+
+extern float X2_fsmTao1_servo;   //10MS光闭环一阶校正
+extern float X2_fsmT1_servo;
+extern float Y2_fsmTao1_servo;
+extern float Y2_fsmT1_servo;
+
+extern float X7_fsmTao1_servo;   //10MS光闭环二阶校正
+extern float X7_fsmTao2_servo;
+extern float X7_fsmT1_servo;
+extern float X7_fsmT2_servo;
+extern float Y7_fsmTao1_servo;
+extern float Y7_fsmTao2_servo;
+extern float Y7_fsmT1_servo;
+extern float Y7_fsmT2_servo;
+/*********************************************************************↑外部引用PositionLoop参数↑**************************************************************/
+extern float FY_revise_out ;               //校正输出乘K
+extern float FW_revise_out;               //方位校正值（速度）
+extern float FW_location_loop_error;    //设定值与编码器值误差
+extern float FY_location_loop_error;         //设定值 - 编码器值 
+extern float FW_location_kp;
+extern float FW_location_loop_actual_error;    //设定值与编码器值误差
+
+/*********************************************************************↑外部引用MotorOutputPosse参数↑**************************************************************/
+extern float FW_output_value;
+extern float FY_output_value;
+extern float accelerate_limit_1ms;
+extern float velocity_limit_value_set;
+extern float FY_limit_acc_value;
+extern float FY_output_value_last;
+extern float FY_output_value_da;
+extern float FW_revise_out_speed;         //方位校正值加前馈速度
+extern float FY_wending_qiankui_speed_lowpass;   //稳定前馈速度滤波
+extern float FY_track_qiankui_speed_k;
+extern float FY_track_qiankui_speed_lowpass;
+extern float FW_wending_qiankui_speed_lowpass;  //方位前馈速度低通滤波
+extern float FW_track_qiankui_speed_k;   //光闭环前馈系数Gain★
+extern float FW_track_qiankui_speed_lowpass;
+/*********************************************************************↑外部引用AttitudeAlgorithm参数↑**************************************************************/
+extern float FW_buchang_degree;
+extern float FY_buchang_degree;
+extern float CarrierFW;
+extern float CarrierFY;
+extern float CarrierHG;
+extern float SpaceSetValueFW;
+extern float SpaceSetValueFY;
+/*********************************************************************↑外部引用Function参数↑**************************************************************/
+extern float FW_pointing_degree_set;    //指向角设定值
+extern float FY_pointing_degree_set;    //指向角设定值
+extern float FY_target_speed;
+
+/*********************************************************************↑外部引用ServoFunction参数↑**************************************************************/
+extern float FW_light_loop_k;       //理想2000
+extern float miss_distance_X_float ;
+extern float miss_distance_X_float_to_angle;
+extern float miss_distance_Y_float;
+extern float miss_distance_Y_float_to_angle;
+extern u8 track_axis_select;      //跟踪轴选择，0：跟方位俯仰 1;跟方位 2：跟俯仰 
+extern float FW_light_loop_k_2;     //默认二阶校正
+extern float FW_light_loop_revise;                 //方位校正输出
+extern float FY_light_loop_k;       //光闭环开环增益K★
+extern float FY_light_loop_revise;                //俯仰校正输出
+extern float FY_light_loop_k_2;      //默认二阶校正※
+extern float FW_pi_K;
+extern u8 FW_light_para_set;      //光闭环校正参数选择 1：K  2:一阶校正  3：二阶校正   4：PI校正
+extern u8 FY_light_para_set;
+/*********************************************************************↑设置参数区↑**************************************************************/
+float FW_location_set = 203.6674;    //方位设定值
+float FY_location_set = 322.8715;    //编码器闭环设定值
+
+float FW_location_last = 0;
+float FY_location_last = 0;
+
+
+//读FSMC状态标志位
+u16 TEST_ReadDataFlag=0;         //FPGA F000标志位
+u16 TuoBa_fLAG = 0;
+u32 FPGA_READ_TEST_ADDR = 0;
+
+//俯仰编码器用
+u16 FY_encoder_l = 0;       
+u16 FY_encoder_h = 0;
+u32 FY_encoder_u32 = 0;        //俯仰绝对式编码器值
+float FY_encoder_degrees = 0;  //俯仰编码器转换为角度
+float FY_encoder_degrees_lowpass = 0;  //俯仰编码器转换为角度
+u8 low_2bit_FY = 0;       
+
+//
+
+
+//方位编码器用
+u16 FW_encoder_l = 0;
+u16 FW_encoder_h = 0;
+u32 FW_encoder_u32 = 0;        //俯仰绝对式编码器值
+float FW_encoder_degrees = 0;  //俯仰编码器转换为角度
+u8 low_2bit_FW = 0;  
+
+
+//光纤惯导变量
+u8 read_usart2[100];
+u32 x_axis_velocity = 0;  
+u32 x_axis_velocity_supplement = 0;
+float x_axis_velocity_float = 0;
+float x_axis_velocity_1msdistance = 0;  
+float x_axis_velocity_1msdistance_sum = 0; 
+
+u32 y_axis_velocity = 0;  
+u32 y_axis_velocity_supplement = 0; 
+float y_axis_velocity_float = 0;
+float y_axis_velocity_1msdistance = 0;
+float y_axis_velocity_1msdistance_sum = 0;
+
+float x_axis_velocity_float_ly = 0;
+float y_axis_velocity_float_ly = 0;
+
+u32 z_axis_velocity = 0; 
+u32 z_axis_velocity_supplement = 0;
+float z_axis_velocity_float = 0;
+float z_axis_velocity_1msdistance = 0;
+float z_axis_velocity_1msdistance_sum = 0;
+
+u32 x_axis_accelerated = 0;   
+u32 x_axis_accelerated_supplement = 0;  
+float x_axis_accelerated_float = 0; 
+
+u32 y_axis_accelerated = 0;    
+u32 y_axis_accelerated_supplement = 0;   
+float y_axis_accelerated_float = 0;
+
+u32 z_axis_accelerated = 0;   
+u32 z_axis_accelerated_supplement = 0;  
+float z_axis_accelerated_float = 0;
+
+u32 roll_attitude = 0;
+u32 roll_attitude_supplement = 0;
+float roll_attitude_float = 0;
+float roll_attitude_float_ly = 0;
+
+u32 pitch_attitude = 0;
+u32 pitch_attitude_supplement = 0;
+float pitch_attitude_float = 0;
+float pitch_attitude_float_ly = 0;
+
+float roll_attitude_before = 0;
+float pitch_attitude_before = 0;
+
+
+u32 yaw_attitude = 0;
+u32 yaw_attitude_supplement = 0;
+float yaw_attitude_float = 0;
+float yaw_attitude_float_ly = 0;
+
+//MEMS惯导变量
+u8 read_usart1[50];
+int yaw_angle_slave = 0;           //从机偏航
+float yaw_angle_float_slave = 0;
+
+int pitch_angle_slave = 0;         //从机俯仰
+float pitch_angle_float_slave = 0;
+
+int roll_angle_slave = 0;          //从机横滚
+float roll_angle_float_slave = 0;
+
+int yaw_angle_velocity_slave = 0;       //从机偏航角速度
+int yaw_angle_velocity_float_slave = 0;
+
+int pitch_angle_velocity_slave = 0;     //从机俯仰角速度
+int pitch_angle_velocity_float_slave = 0;
+
+int roll_angle_velocity_slave = 0;      //从机横滚角速度
+int roll_angle_velocity_float_slave = 0;
+
+u32 X_axis_palstance = 0;
+float X_axis_palstance_float = 0;
+float X_axis_palstance_float_off_set = 0;
+float X_axis_palstance_float_lowpass = 0;
+float X_axis_palstance_float_lowpass_out = 0;
+
+float low_pss_out_sanjie = 0;
+
+u32 Y_axis_palstance = 0;
+float Y_axis_palstance_float = 0;
+
+u32 Z_axis_palstance = 0;
+float Z_axis_palstance_float = 0;
+
+float X_slave_1ms_distance = 0;
+float X_slave_1ms_distance_PT = 0;
+float X_slave_1ms_distance_SV = 0;
+float X_slave_1ms_distance_sum = 0;
+
+float Y_slave_1ms_distance = 0;
+float Y_slave_1ms_distance_sum = 0;
+
+float Z_slave_1ms_distance = 0;
+float Z_slave_1ms_distance_sum = 0;
+
+//M1陀螺
+u8 read_usart3[10];
+u8 read_usart4[200];
+//M1惯导
+u32 IMU_bit_u32 = 0;
+u32 IMU_bit1 = 0;
+u32 IMU_bit2 = 0;
+u32 IMU_bit3 = 0;
+u32 IMU_bit4 = 0;
+u32 IMU_bit5 = 0;
+int IMU_bit_int = 0;
+float IMU_bit_float = 0;
+float IMU_bit_float_lowpass = 0;
+
+//LVDS
+u8 lvds_array1[110];
+u8 lvds_array2[110];
+
+//温度
+u16 temp1_u16 = 0;
+u16 temp2_u16 = 0;
+float temp1_f = 0;
+float temp2_f = 0;
+
+//脱靶量
+u8 read_usart5[20];
+int miss_distance_judge_X = 0;
+int miss_distance_judge_Y = 0;
+int miss_distance_X = 0;
+int miss_distance_Y = 0;
+
+
+
+extern float FW_Miss_distance;//方位脱靶量
+extern float FY_Miss_distance;//俯仰脱靶量
+extern float WD_FW,WD_FY;
+
+
+
+//求帧间误差
+float miss_distance_Y_float_last = 0;  //上一次脱靶量计数
+float miss_distance_X_float_last = 0;  //上一次脱靶量计数
+
+float FY_miss_distance_sub = 0;
+float FW_miss_distance_sub = 0;
+////////////////////////////////////////////////////////////////////////////////////
+
+//系统模式
+u8 system_mode = 0; 
+
+//模式参数设置区
+u8 FY_location_loop_open_flag = 0;
+u8 FW_location_loop_open_flag = 0;
+u8 FW_light_loop_open_flag = 0;
+u8 FY_light_loop_open_flag = 0;
+
+//3回零
+u8 huiling_cnt = 0;
+u8 huiling_once_flag = 1;
+extern u8 FW_zero_flag;    //方位上电在哪个区域标志位
+
+//5扫描
+u32 timer_126ms_cnt = 0;           //126ms定时计数
+u8 scan_parameter_set_flag = 1;   //扫描速度加速度参数设定标志位，只进一次
+extern float FW_scan_degree;        
+extern float FY_scan_degree;
+extern int FW_scan_degree_out_int;
+extern int FY_scan_degree_out_int;
+extern u8 scan_cnt;               //扫描次数计数
+extern u8 scan_cnt_derection;     //扫描角度个数计数
+u8 yushu = 0;                     //1°阶跃时用
+float FY_sin_value = 0;                                                                                                                                                                                                                                                                                                                            
+float FW_relative_degree = 0;
+float FY_off_set = 0;
+float FY_sin_value_fabs = 0;
+
+float FW_relative_rad = 0;
+float FY_relative_rad = 0;
+
+float matrix_a = 0;
+float matrix_b = 0;
+float matrix_c = 0;
+
+
+//模拟阶跃
+float FW_simulated_target_motion = 200;    //模拟阶跃
+float FY_simulated_target_motion = 300;    //模拟阶跃
+float FW_pre_lowpss_filter = 0;            //模拟阶跃前置滤波输出
+float FY_pre_lowpss_filter = 0;            //模拟阶跃前置滤波输出
+//float pre_lowpss_filter = 0;            //模拟阶跃前置滤波输出
+u32 step_cnt = 0;                       //模拟阶跃计数
+u32 FY_step_cnt = 0;                       //模拟阶跃计数
+float FW_set_off = 3;                      //模拟阶跃角度设置
+float FY_set_off = 3;                      //模拟阶跃角度设置
+
+//6稳定
+float X_slave_1ms_distance_sum_last = 0;
+float X_slave_1ms_distance_sub = 0;
+
+float Z_slave_1ms_distance_sum_last = 0;
+float Z_slave_1ms_distance_sub = 0;
+
+float X_speed_off_set = 0.025;         //MEMS陀螺俯仰稳定速度偏置，越大越往下
+float Z_speed_off_set = 0.019;         //MEMS陀螺方位稳定速度偏置，越大越往左
+
+u32 sin_cnt = 0;              //sin计数
+float sin_value = 0;          //sin计算值
+float sin_value_sum = 0;      //sin计算值
+float sin_T_f = 5000;
+u32 sin_T_u = 5000;
+
+float FY_qiankui_speed = 0;                   //稳定差分前馈速度
+
+
+float FW_revise_out_speed_acc = 0;     //限制加速度后的速度
+float FW_revise_out_speed_last = 0;    //上一个周期的速度
+float FW_revise_out_volatge = 0;       //速度校正转换为电压
+
+
+float FW_qiankui_speed = 0;
+
+
+float FY_light_loop_revise_speed = 0;                //俯仰校正输出
+
+
+float FW_light_loop_revise_speed = 0;                 //方位校正输出
+
+float FW_track_qiankui_speed = 0;
+float FY_track_qiankui_speed = 0;
+
+u32 step_jishi = 300;
+
+
+//单输出口
+u8 output_open_flag = 0;
+
+int FW_output_value_can  = 0;
+float FW_output_angle_pa_last  = 301.5;     //FW_zero_degree_zheng   
+float FY_output_angle_pa_last  = 88.5;     //FY_zero_degree
+float FW_output_angle_pa_now  = 0;
+float FY_output_angle_pa_now  = 0;
+float FW_output_value_can_sub  = 0;
+
+
+
+
+float velocity_limit_value = 0;
+
+float FW_limit_vel_value = 0;
+float FY_limit_vel_value = 0;
+
+
+//求差分速度
+float global_FW_position_piror = 0;
+float global_FY_position_piror = 0;
+float FW_chafen_speed = 0;
+float FY_chafen_speed = 0;
+
+float FW_send_array[10];
+float FY_send_array[10];
+u8 FW_send_array_select = 0;
+u8 FY_send_array_select = 0;
+
+float shiyanzhengfu = 1;
+
+float da_out = 0;
+
+
+//自检标志位
+int FY_encoder_Flag = 0;
+int FW_encoder_Flag = 0;
+int GuangxianGuandao_Flag = 0;
+extern u32 Time;
+
+float FW_zero_degree_fu = 301.5;        //-0.3
+float FW_zero_degree_zheng=301.5;       //0.02 《- 201.2021   
+float FY_zero_degree=88.5;              //0.06 《- 323.02  2 
+
+uint16_t fpgaUpdateFlag = 0;
+extern u8 AA_TXData[100];     //发送数据
+extern float TX_Coarse_Azimuth;//粗跟踪伺服方位
+extern float TX_Coarse_Pitch;//粗跟踪伺服俯仰
+extern union FloatToArray Temp_Data;//
+extern float TX_Ins_Attitude_FW;//惯导姿态方位
+extern float TX_Ins_Attitude_FY;//惯导姿态俯仰
+extern float TX_Ins_Attitude_Roll;//惯导姿态横滚
+extern float TX_Ins_Speed_FW;//惯导角速度方位
+extern float TX_Ins_Speed_FY;//惯导角速度俯仰
+extern float TX_Ins_Speed_Roll;//惯导角速度横滚
+extern float TX_Encoder_FW;//编码器方位
+extern float TX_Encoder_FY;//编码器俯仰
+extern float TX_Miss_FY;//脱靶量方位
+extern float TX_Miss_FW;//脱靶量俯仰
+extern float TX_Fast_Reflection_Mirror_FW;//快反镜方位
+extern float TX_Fast_Reflection_Mirror_FY;//快反镜俯仰
+extern int Read_JiaoYan_Flag;
+extern uint8_t  Read_JiaoYanHouShuJu[46];//校验后存储数据
+extern u8 CommandNew,CommandOld,CO_ID,ST_ID,Work_Mode;//命令 设备ID 工作模式
+extern u8 TX_Servo_Steady_State;//伺服稳态
+extern u8 AA_TX_Len,AA_RX_Len;//数据长度
+extern float DianLiu_FW;
+extern float DianLiu_FY;
+extern s8 DianLiu_2;
+extern s8 DianLiu_1;
+extern u8 TX_Coarse_State;  ///粗跟踪状态字
+extern u8 TX_Precise_State; ///精跟踪状态字
+extern float TX_Ins_Yaw;//惯性空间偏航
+extern float TX_Ins_RollAngle;//惯性空间横滚
+extern float TX_Ins_PitchAngle;//惯性空间俯仰
+extern u8 Fast_Mirror_Work_Mode;//快反镜工作模式
+extern u8 Primary_Mirror_Work_Mode;//主反射镜工作模式
+extern u8 Point_Mode; //指向模式
+extern float FW_Huiling_last;
+extern float FY_Huiling_last;
+
+//步进模式变量
+int FW_BuJin_Time_Count = 0;                            
+int FW_BuJin_Flag = 0;                                //方位步进标志位
+int FW_BuJin_LiangCheng_Degree = 0;                   //方位步进量程 无符号
+int FW_BuJin_Time = 0;                                //方位步进 进入中断时间 整型
+unsigned int FW_BuJin_SuDu = 0;                       //方位步进  扫描速度      无符号整型
+unsigned int FW_BuJin_Count = 0;                      //方位步进  扫描次数      无符号整形
+int FW_BuJin_degree_Start = 0;                        //方位步进  扫描起始角度  有符号整形
+float FW_BuJin_degree_out = 0;                        //方位步进  输出  浮点型
+unsigned int FW_BuJin_Direct = 0;                     //方位步进  扫描方向      无符号整形
+int  FW_BuJin_limit = 0;                              //方位步进  扫描限位      有符号整形
+int  FW_BuJin_degree_step = 0;                        //方位步进  扫描步长      有符号整形
+
+int FY_BuJin_Flag = 0;                                //俯仰步进标志位
+unsigned int FY_BuJin_Count = 0;                      //俯仰步进  扫描次数      无符号整形
+int FY_BuJin_LiangCheng_Degree = 0;                   //俯仰步进量程 无符号
+int FY_BuJin_Time = 0;                                //俯仰步进 进入中断时间 整型
+unsigned int FY_BuJin_SuDu = 0;                       //俯仰步进  扫描速度      无符号整型
+int FY_BuJin_degree_Start = 0;                        //俯仰步进  扫描起始角度  有符号整形
+float FY_BuJin_degree_out = 0;                        //俯仰步进  输出  浮点型
+unsigned int FY_BuJin_Direct = 0;                     //俯仰步进  扫描方向      无符号整形
+int  FY_BuJin_limit = 0;                              //俯仰步进  扫描限位      有符号整形
+int  FY_BuJin_degree_step = 0;                        //俯仰步进  扫描步长      有符号整形
+extern int Send_Flag;
+extern u8 Scan_FangShi;
+
+//路径
+u8 step_open_flag = 0;
+unsigned int diaoyong_cnt = 0;
+
+float step_design_set = 0;
+
+
+float step_design_set_prepass = 0;
+
+int cnt_Step = 0;
+int Time_Long = 110;
+
+
+int ScanAngleRang = 6 ;                        //扫描范围
+float FY_ScanAngleRang = 2;                      //俯仰扫描范围
+float FW_ScanStepLength = 2;                      //扫描步长
+int Scan_StepCount = 0;                         
+int	FW_Scan_StartAngle = 0;                    //方位扫描起始角度
+int FY_Scan_StartAngle = 65;
+int Scan_Direction = 0x01;                        //判断扫描方向
+int FW_Scan_StopAngle = 0;                     //方位扫描结束角度
+int FW_Direction = 0;           //右+1  左-1   //方位方向
+int huanxiangzheng_flag = 0;
+int FY_Direction = 0;          //上+1   下-1   //俯仰方向
+int Flag_Com_Direction = 1;                    //方向只赋一次值
+u8 Scan_Number = 0;
+u8 Give_Scan_Number = 20;
+float Cha = 0;
+float FW_encoder_degrees_lowpass = 0;  //俯仰编码器转换为角度
+
+extern float WD_FW;
+extern float WD_FY;
+int Send = 0;
+float FY_Scan_Zhixing = 0;
+
+int jisuan_TIME = 0;
+int Time_LY = 0;
+float FW_yunsu_sudu = 0;
+float FW_yunsu_sudu_1 = 0;
+float FY_yunsu_sudu_1 = 0;
+float Old_yunsu = 0;
+int yunsu_cnt = 0;
+float FY_yunsu_sudu = 0;
+u8 CanShu_Read[38]={0};
+extern u8	EXTI2_FLAG;	
+u32 MaiChong_cnt=0;
+int fasong_cnt = 65;
+int once_flag = 0;
+float FW_JueDui_StartAngle = 60;
+
+int LY_Flag = 0;
+int WaiTong_CNT = 0;
+
+extern u32  EXTI2_CNT;
+int Send_MaiChong_CNT = 0;
+float WuCha = 0;
+
+float Watch_CaiJi[220]={0};
+int watchi = 0;
+int TX_watch = 10;
+int Ma_watch = 1;	
+u8 Ma_CaiJi[300]={0};
+
+float Watch_MaiChong_Later[70]={0};
+int watchi1 = 0;
+
+u32 CaiJi_CNT=0;
+
+int yunsu_zheng = 0;
+int yunsu_fu = 0;
+
+float FW_yunsu_StopAngle = 80;
+float FW_yunsu_StartAngle = 70;
+u8 TuoLuo_Flag = 1;
+
+u32 camera_arry_cnt = 0;
+float camera_arry[1000];
+u8 miss_distance_flag = 0;
+u8 miss_distance_cnt = 0;
+u8 chakan1 = 0;
+u8 chakan2 = 0;
+float miss_distance_X_float_start1 = 0;
+float miss_distance_X_float_start2 = 0;
+float miss_distance_X_float_end1 = 0;
+float miss_distance_X_float_sub1 = 0;
+float miss_distance_X_float_end2 = 0;
+float miss_distance_X_float_sub2 = 0;
+float miss_distance_X_float_end3 = 0;
+float miss_distance_X_float_sub3 = 0;
+float miss_distance_X_float_end4 = 0;
+float miss_distance_X_float_sub4 = 0;
+float miss_distance_X_float_end5 = 0;
+float miss_distance_X_float_sub5 = 0;
+float miss_distance_X_float_end6 = 0;
+float miss_distance_X_float_sub6 = 0;
+float miss_distance_X_float_end7 = 0;
+float miss_distance_X_float_sub7 = 0;
+float miss_distance_X_float_end8 = 0;
+float miss_distance_X_float_sub8 = 0;
+float miss_distance_X_float_end9 = 0;
+float miss_distance_X_float_sub9 = 0;
+float miss_distance_X_float_end10 = 0;
+float miss_distance_X_float_sub10 = 0;
+float miss_distance_X_float_endsum1 = 0;
+float miss_distance_X_float_ave = 0;
+float miss_distance_X_float_endsum2 = 0;
+
+
+float TEST_Change = 1234.8;
+
+
+
+float step_sin_value = 0;
+u32 step_sin_cnt = 0; 
+
+extern float FY_Watch_shuyin_error;
+
+
+
+
+
+float FW_step_chafen_speed = 0;
+float FY_step_chafen_speed = 0;
+float global_FW_step_piror = 0;
+float global_FY_step_piror = 0;
+extern float Watch_location_loop;
+
+
+
+u8 TuoBa_Set_CNT = 0;
+float FW_encoder_TuoBa_Set = 0;
+float FY_encoder_TuoBa_Set = 0;
+
+
+u8 PT_CNT = 0;
+float PT_FY_miss_distance_sub = 0;
+float PT_miss_distance_Y_float_last = 0;
+				
+float PT_FW_miss_distance_sub = 0;
+float PT_miss_distance_X_float_last = 0;
+
+
+float watch_slave_X[2000] = {0};
+float watch_slave_Z[2000] = {0};
+u16 slave_CNT = 0;
+u16 slaveX_CNT = 0;
+int z_int = 0;
+
+u32 Scan_cnt_ly = 0;
+u32 YunSu_cnt_ly = 0;
+
+unsigned int JieYue_cnt = 0;
+u8 Change_flag_ly = 0;
+
+extern float step_design_set_ly;
+extern float PanFangXiang;
+extern int Flag_Com_Direction_ly;                    //方向只赋一次值
+extern u8 Start_cnt;
+
+extern float YunSu_step_design_set_ly;
+extern u8 YunSu_Start_cnt;
+extern float YunSu_PanFangXiang;
+extern int Flag_YunSu_Direction_ly;                    //方向只赋一次值
+extern u8 Test_Scan_Time;
+float yaw_offset_val = -0.346;    //-4.009
+float pitch_offset_val = 0.1;  //0.405
+float roll_offset_val = 0.1;   //0.109
+
+u8 ZhenJiShu_ly[1100] = {0};
+u8 zjs[1000] = {0};
+u16 ZJS_CNT = 0;
+u16 ly_zjs = 0;
+u16 CeShi_CNT = 0;
+
+float miss_distance_X_float_LowpassBefore = 0;
+float miss_distance_Y_float_LowpassBefore = 0;
+float FW_miss_distance_lowpass_ly = 0;
+float FY_miss_distance_lowpass_ly = 0;
+u8 lowpass_flat = 1; 
+float ave_k=0.3;
+u16 miss_Watch_CNT = 0;
+float miss_Watch[1500] = {0};
+
+extern int huanXiang_flag;
+extern u16 X1_ly_cnt;
+extern u16 X2_ly_cnt;
+extern float X1_ly[1500];
+extern float X2_ly[1500];
+
+extern u8 ZhiXiangFlag;
+u8 JiTing_Set_CNT = 0;
+u8 JiTing_ZhongDuan_CNT = 0;
+float FW_encoder_JiTing_Set = 0;
+float FY_encoder_JiTinga_Set = 0;
+
+extern float WaiTongBu_step_design_set;
+extern u32 WaiTongBu_MaiChong_cnt;
+extern int WaiTongBu_Flag_Com_Direction;                    //方向只赋一次值
+extern float WaiTongBu_PanFangXiang;
+extern u8 WaiTongBu_Start_cnt;
+extern u16 Chang_Kp_CNT;
+
+u16 KongJianZhiXiang_CNT = 0;
+float KongJianZhiXiang_FW = 0;
+float KongJianZhiXiang_FY = 0;
+
+u16 ZhiXiang_Complete_Flag = 0;
+extern u8 EXIT_POINT_FLAG;
+extern u8 KongJianPoin_flag;
+extern u8 SCAN_POINT_FLAG;
+
+u8 GuiLingFlag = 0;
+extern u8 ZhiXiang_Complete_FlagLY1;
+extern u8 YunSu_POINT_FLAG;
+extern u8 AA_Data[];
+extern u16 ScanFunction_Number;
+extern u16 YunSuFunction_Number;
+
+extern u8 ZhiXiang_Complete_FlagLY;
+extern u8 ZhiXiang_Complete_FlagYunSu;
+
+extern float FW_Miss_distance;//方位脱靶量
+extern float FY_Miss_distance;//俯仰脱靶量
+
+extern u8 EXIT_LianXu_FLAG;
+extern u8 EXIT_Song;
+
+u8 FW_Xian_Left = 1;
+u8 FW_Xian_Right = 1;
+
+extern float r_change_later;
+extern float y_change_later;
+extern float p_change_later;
+
+int FW_LY_CNT = 0;
+u8 last_position_flag = 0;
+
+float GXKJ_FW = 0;
+float GXKJ_FY = 0;
+
+
+
+u8 Test_XiangWei = 0;
+
+u8 start_flat = 0;
+u8 start_CNT = 0;
+extern float Point_FY_set_prepass;
+float Position_begin = 0;
+float Encoder_Start = 0;
+
+extern float FY_miss_distance_error ;            
+extern float FW_miss_distance_error ; 
+extern float FW_miss_distance_error_lowpass;      //方位脱靶量80Hz低通滤波
+extern float FY_miss_distance_error_lowpass;      //俯仰脱靶量80Hz低通滤波
+
+extern u8 miss_cnt_10ms;
+
+//float GD_angle = 0.022;
+float GD_angle = 1.29;
+INAngle inAngle;
+
+extern float FW_New_BM;
+extern float FY_New_BM;
+float FW_Space = 0;
+float FY_Space = 0;
+
+extern float Space_FY;
+extern float Space_FW;
+
+float FY_OFSET = 0.001;
+float FW_OFSET = 0.0028;
+extern float error_sum_limit;
+extern float FW_location_ki;
+extern float FY_location_ki;
+float Change_FW_ki = 0.04;
+float Change_limit = 50;
+float yaw_attitude_change = 0;
+u8 ly_GD_flag = 2;
+u16 ZhenPin = 0;
+
+extern float erFsm2_servo[2][3][10];
+extern float euFsm2_servo[2][3][10];
+
+extern u8 BeginMove_flag;
+extern float FY_Target_Position;
+
+u16 OutSpeedCnt = 0;
+u16 CntFW = 0;
+float SpeedNowFW = 0;
+float MaxPosition = 0;
+float MinPosition = 0;
+float OutSpeedFrequency = 0.1;
+u16 OutCount = 0;
+u16 FrequencyCnt = 0;
+float SpeedBode[50] = {0};
+float OutSpeedAmp = 2;
+extern float FW_pointing_degree_LY;
+extern u8 Mode_Chose;
+extern float FY_Speed_Position;
+extern float FY_485_SpeedFloat;
+
+
+/*相机控制相关*/
+extern u8 CAM_Data[],CAM_Answer_Data[];
+extern u16 Threshold;//阈值
+extern u8 Windows_Switch;
+extern u16 X_Length_Setting,Y_Length_Setting;
+extern u32 Exposure_Time;//曝光时间
+u8 Camera_Config_cnt=0;
+//以下4行为测试用变量,测试后可删除
+extern u32 Exposure_Time_temp;
+extern u16 Threshold_temp;
+extern u8 Windows_Switch_temp;
+extern u16 X_Length_Setting_temp,Y_Length_Setting_temp;
+/*************/
+u8 Camer_Set_CNT = 0;
+u8 FW_Choose_Mode = 0;
+u8 FY_Choose_Mode = 0;
+float FW_Speed_Position = 0;
+u16 Test_ZhenPin_CNT = 0;
+u16 ZhenPin_1 = 0;
+u16 ZhenPin_2 = 0;
+extern float X_Migration;
+extern float Y_Migration;
+
+
+//求RMS的和的平方值
+float RMS2_vol(float Final,float Final2)
+{
+		float X=0.0,Y=0.0;
+		X=CalculateRMS_1(Final)*29.5;
+		Y=CalculateRMS_2(Final2)*29.5;
+}
+
+float RMS2_vol1(float Final)
+{
+		float X=0.0;
+		X=CalculateRMS_1(Final)*29.5;
+		return X;
+}
+
+float RMS2_vol2(float Final2)
+{
+		float Y=0.0;
+		Y=CalculateRMS_2(Final2)*29.5;
+		return Y;
+}
+
+void TIM10_Init(u16 arr,u16 psc)
+{
+		TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
+		NVIC_InitTypeDef NVIC_InitStructure;
+
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM10,ENABLE);  
+
+		TIM_TimeBaseInitStructure.TIM_Period = arr; 	  //自动重装载值
+		TIM_TimeBaseInitStructure.TIM_Prescaler=psc;      //定时器分频
+		TIM_TimeBaseInitStructure.TIM_CounterMode=TIM_CounterMode_Up; //向上计数模式
+		TIM_TimeBaseInitStructure.TIM_ClockDivision=TIM_CKD_DIV1; 
+
+		TIM_TimeBaseInit(TIM10,&TIM_TimeBaseInitStructure);//初始化TIM3
+
+		TIM_ITConfig(TIM10,TIM_IT_Update,ENABLE); //允许定时器3更新中断
+		TIM_Cmd(TIM10,ENABLE); //使能定时器3
+
+		NVIC_InitStructure.NVIC_IRQChannel=TIM1_UP_TIM10_IRQn; //定时器3中断
+		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0x02; //抢占优先级1
+		NVIC_InitStructure.NVIC_IRQChannelSubPriority=0x01; //子优先级3
+		NVIC_InitStructure.NVIC_IRQChannelCmd=ENABLE;
+		NVIC_Init(&NVIC_InitStructure);
+		
+		
+		NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
+		NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
+	
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
+void TIM2_config(void)
+{   
+	TIM_TimeBaseInitTypeDef TIM_BaseInitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+	TIM_BaseInitStructure.TIM_Period = 1000-1;	  	//设置周期
+	TIM_BaseInitStructure.TIM_Prescaler = 84-1;	  	//预分频数，定时器主频位84M，预分频设置为83，分频84倍，一个时钟脉冲位1us
+	TIM_BaseInitStructure.TIM_ClockDivision = 0;  	//时钟分割
+	TIM_BaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;//计数器向上计数
+	TIM_TimeBaseInit(TIM2, &TIM_BaseInitStructure);	//执行初始化函数    
+//	TIM_ARRPreloadConfig(TIM2, ENABLE);				//启用ARR的影子寄存器（直到产生更新事件才更改设置）
+	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM2, ENABLE);											//使能定时器2
+	
+	
+	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);		
+	
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
+	
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+	
+}
+
+
+void TIM3_Int_Init(u16 arr,u16 psc)
+{
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);  ///使能TIM3时钟
+	
+	TIM_TimeBaseInitStructure.TIM_Period = arr; 	//自动重装载值
+	TIM_TimeBaseInitStructure.TIM_Prescaler=psc;  //定时器分频
+	TIM_TimeBaseInitStructure.TIM_CounterMode=TIM_CounterMode_Up; //向上计数模式
+	TIM_TimeBaseInitStructure.TIM_ClockDivision=TIM_CKD_DIV1; 
+	
+	TIM_TimeBaseInit(TIM3,&TIM_TimeBaseInitStructure);//初始化TIM3
+	
+	TIM_ITConfig(TIM3,TIM_IT_Update,ENABLE); //允许定时器3更新中断
+	TIM_Cmd(TIM3,ENABLE); //使能定时器3
+	
+	NVIC_InitStructure.NVIC_IRQChannel=TIM3_IRQn; //定时器3中断
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0x01; //抢占优先级1
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority=0x01; //子优先级3
+	NVIC_InitStructure.NVIC_IRQChannelCmd=ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
+	
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+	
+}
+
+
+//void TIM2_IRQHandler(void)
+//{
+//  if(TIM_GetITStatus(TIM2, TIM_IT_Update)==1)
+//  {
+////		Time++;
+//		TIM_ClearITPendingBit(TIM2, TIM_IT_Update); 
+//	}		
+//	TIM_ClearITPendingBit(TIM2, TIM_IT_Update); 
+//}
+
+
+//void TIM3_IRQHandler(void)
+//{
+////	if(TIM_GetITStatus(TIM10,TIM_IT_Update)==SET) //溢出中断1MS中断
+//	if(TIM_GetITStatus(TIM3, TIM_IT_Update)==1)
+//	{
+//		GPIO_ToggleBits(GPIOE, GPIO_Pin_2);
+//		GPIO_ToggleBits(GPIOA, GPIO_Pin_6);	
+//	}
+//	TIM_ClearITPendingBit(TIM3, TIM_IT_Update); 
+//}
+extern float EXIT_FW_Zero,FY_WaiTongBu_ZhiXing,EXIT_FY_Zero;
+//float DATA_1[300],DATA_2[300],DATA_3[300],DATA_4[300],DATA_5[300],DATA_6[300],DATA_7[300],DATA_8[300],DATA_9[300];
+u8 EXTI_CNT,LY_flag_N=0,A;
+u16 a_i;
+u16 Write_485_CNT = 0;
+//定时器3中断服务函数
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+	
+	u16 Time_High=0;
+	u16 Time_Low=0;	
+	uint32_t i = 0;
+	if(TIM_GetITStatus(TIM10,TIM_IT_Update)==SET) //溢出中断1MS中断
+	{		  
+		Time_High=*(uint32_t*)(Time_Gao_16);
+		Time_Low =*(uint32_t*)(Time_Di_16);
+		Time = (Time_High<<16) + Time_Low;
+		
+//		RMS2_bianmaqi_X=RMS2_vol1(FY_encoder_degrees); 
+//		RMS2_bianmaqi_Y=RMS2_vol2(FW_encoder_degrees);
+		
+		GPIO_ToggleBits(GPIOE, GPIO_Pin_2);		//切换指定的GPIO引脚
+		Test_ZhenPin_CNT++;
+/////////////////
+	if(fasong_cnt == 65)    //65
+	{		
+			if(LY_Flag ==1)
+			{
+				Send_MaiChong_CNT++;
+				GPIO_SetBits(GPIOA,GPIO_Pin_6);
+				Delay_us(110);
+				GPIO_ResetBits(GPIOA,GPIO_Pin_6);
+				LY_Flag =0;
+				
+				Watch_MaiChong_Later[watchi1] = FW_encoder_degrees; //俯仰编码器转换为角度
+				watchi1++;
+				if(watchi1 == 62)
+				{
+					watchi1 = 61;
+				}
+				
+			}
+			else
+			{
+						;
+			}
+	}
+	else
+	{
+		fasong_cnt++;
+		LY_Flag =1;
+	}	
+        //双线性变换参数设置
+		para_set();
+		TEST_ReadDataFlag=*(uint32_t*)(PC_ComReadADDRFlag);   //如果串口里有数，TEST_ReadDataFlag标志位会置位
+		TuoBa_fLAG=*(uint32_t*)(PC_TuoBaADDRFlag);	//0x6400F000
+		read_FY_encoder();									//读取俯仰编码器
+		read_FW_encoder();									//读取方位编码器
+	
+		
+		if((TuoBa_fLAG & 0x0008) == 0x0008)
+		{
+				PC_Com_Read();
+				PC_Data_TX();
+//			Comm1_Com_Read()	;
+//			Comm1_Data_Pack();
+		}
+
+		
+		//读取光纤惯导串口2
+//		read_inertial_navigation(); 
+//		read_jishangguandao();///机上惯导
+		//读取MEMS惯导串口1
+//		read_inertial_navigation_slave();
+		//读取脱靶量串口5
+		read_miss_distance();
+		//读取总控指令串口6
+//		read_master_control();
+        //读取M1惯导串口3		
+//		read_M1tuoluo();  
+		//读取上位机labview设置
+//		read_labview_set();
+        //读取LVDS
+//        read_LVDS();
+		//输出LVDS
+//		write_LVDS();
+		//读取板载温度
+		read_temperature();	
+		//读取惯导串口1
+		Gyroscope_data_Process();
+//	Read_485();
+		ZhenPin++;	
+		
+//1急停				
+		if(system_mode == 1)    //急停就进入待机模式 
+		{
+				Mode_Chose = 1;
+				FW_output_angle_pa_last  = FW_encoder_degrees;//俯仰编码器转换为角度
+				FY_output_angle_pa_last  = FY_encoder_degrees;//俯仰编码器转换为角度
+				FW_light_loop_open_flag = 0;
+				FY_light_loop_open_flag = 0;
+				
+				erFsm2_servo[0][0][7] = 0;
+				erFsm2_servo[0][1][7] = 0;
+				erFsm2_servo[0][2][7] = 0;
+				
+				euFsm2_servo[0][1][7] = 0;
+				euFsm2_servo[0][2][7] = 0;
+				
+				erFsm2_servo[1][0][7] = 0;
+				erFsm2_servo[1][1][7] = 0;
+				erFsm2_servo[1][2][7] = 0;
+				euFsm2_servo[1][1][7] = 0;
+				euFsm2_servo[1][2][7] = 0;
+			
+			
+			
+//		    output_open_flag = 0;
+			DA12_out(0,0);	
+			Flag_Com_Direction = 1;
+			//清标志位
+			huiling_once_flag = 1;
+			Z_slave_1ms_distance_sum = 0;  //Z方位
+			X_slave_1ms_distance_sum = 0;
+
+			miss_distance_flag = 0;
+			Send_MaiChong_CNT = 0;
+			step_open_flag = 0;
+			step_design_set = 0;
+			diaoyong_cnt = 0;
+			MaiChong_cnt = 0;
+			FY_Scan_Zhixing = 0;
+
+			CaiJi_CNT = 0;
+
+			JieYue_cnt = 0;
+			Change_flag_ly = 0;
+			FW_location_kp = 19;		
+			Test_Scan_Time = 0;
+			huanXiang_flag = 0;
+				
+			KongJianPoin_flag = 0;
+			GuiLingFlag = 0;
+
+
+//////////////////定位到当前点/////////////////////////////////////////////
+			FY_location_loop_open_flag = 1;
+			FW_location_loop_open_flag = 1; 
+			FW_light_loop_open_flag = 0;
+			FY_light_loop_open_flag = 0;
+			FW_location_para = FW_location_para_set;
+			FY_location_para = FY_location_para_set;
+			
+			JiTing_Set_CNT++;
+			JiTing_ZhongDuan_CNT++;
+			if(JiTing_Set_CNT == 1)
+			{
+				FW_encoder_JiTing_Set = FW_encoder_degrees;
+				FY_encoder_JiTinga_Set = FY_encoder_degrees;
+//				FW_encoder_JiTing_Set = FW_encoder_degrees;
+//				FY_encoder_JiTinga_Set = FY_encoder_degrees;
+			}
+			if(JiTing_Set_CNT == 6)                  //急停走到位后记录上次跟踪位置
+			{
+				if(last_position_flag == 0)
+				{
+					last_position_flag = 1;
+//					FW_output_angle_pa_last  = FW_encoder_degrees;     //FW_zero_degree_zheng   
+//					FY_output_angle_pa_last  = FY_encoder_degrees;     //FY_zero_degree
+					FW_output_angle_pa_last  = FW_encoder_degrees;     //FW_zero_degree_zheng   
+					FY_output_angle_pa_last  = FY_encoder_degrees;     //FY_zero_degree
+					
+					FW_light_loop_revise = 0;
+					FY_light_loop_revise = 0;
+					
+					FW_track_qiankui_speed = 0;
+					FY_track_qiankui_speed = 0;
+					
+					
+					FY_miss_distance_error = 0;
+					FW_miss_distance_error = 0;
+					FW_Miss_distance = 0;
+					FY_Miss_distance = 0;
+					miss_distance_X_float = 0;
+					miss_distance_Y_float = 0;
+					miss_distance_Y_float_to_angle = 0;
+					miss_distance_X_float_to_angle = 0;
+					FW_miss_distance_error_lowpass = 0;     
+					FY_miss_distance_error_lowpass = 0;     
+					
+					FY_track_qiankui_speed_lowpass = 0;
+					FW_track_qiankui_speed_lowpass = 0;
+					
+					miss_cnt_10ms = 0;
+					Z_slave_1ms_distance = 0;
+					X_slave_1ms_distance_SV = 0;
+				}
+			}
+			
+//			if(JiTing_Set_CNT > 30)
+//			{
+//				FW_location_set = FW_encoder_JiTing_Set;			
+//				FY_location_set = FY_encoder_JiTinga_Set;
+//				velocity_limit_value_set = 5;	
+//				accelerate_limit = 1000;
+//				output_open_flag = 1;
+//			}
+			
+			
+			
+//			if(JiTing_Set_CNT == 3)
+			if(JiTing_ZhongDuan_CNT == 3 || JiTing_Set_CNT == 60)
+			{
+				GPIO_SetBits(GPIOA,GPIO_Pin_6);
+				Delay_us(110);
+				GPIO_ResetBits(GPIOA,GPIO_Pin_6);
+			}
+			if(JiTing_Set_CNT > 60)
+			{
+				JiTing_Set_CNT = 60;
+				
+			}
+			if(JiTing_ZhongDuan_CNT > 3)
+			{
+				JiTing_ZhongDuan_CNT = 3;	
+			}
+			
+			FW_location_set = FW_encoder_JiTing_Set;			
+			FY_location_set = FY_encoder_JiTinga_Set;
+			velocity_limit_value_set = 5;	
+			accelerate_limit = 1000;
+			output_open_flag = 1;
+			
+			if(EXIT_Song == 1)
+			{
+				EXIT_LianXu_FLAG = 1;
+			}
+
+			
+		}
+//2掉电=					
+		if(system_mode == 2)    //急停就进入待机模式 
+		{
+			power_down();
+		}
+		FW_Xian_Left = 1;
+		FW_Xian_Right = 1;
+//3回零模式√			
+		if(system_mode == RETURN_ZERO_MODE)    //回零模式
+		{
+				counter1=0;
+				counter2=0;
+				counter_j=0;
+		    Mode_Chose = 1;
+				counter_data=1;
+				sin_cnt = 0;//sin计数
+				sin_value = 0;//sin计算值
+				FW_output_angle_pa_last  = FW_encoder_degrees;//俯仰编码器转换为角度
+				FY_output_angle_pa_last  = FY_encoder_degrees;//俯仰编码器转换为角度
+				
+				EXTI2_FLAG = 0;
+				last_position_flag = 0;  //跟踪时记录上次位置一次
+				FW_Xian_Left = 0;
+				FW_Xian_Right = 0;
+/////////////////////清除内同步缓存/////////////////////////////////				
+				SCAN_POINT_FLAG = 0;
+				step_design_set_ly = 0;
+				Scan_cnt_ly = 0;
+				Flag_Com_Direction_ly = 1;
+				PanFangXiang = 0;
+				Start_cnt = 1;	
+				ScanFunction_Number = 0;
+				ZhiXiang_Complete_FlagLY1 = 0;
+/////////////////////清除匀速缓存/////////////////////////////////			
+				YunSu_POINT_FLAG = 0;
+				YunSu_step_design_set_ly = 0;
+				YunSu_Start_cnt = 1;
+				YunSu_PanFangXiang = 0;
+				Flag_YunSu_Direction_ly = 1;
+				YunSu_cnt_ly = 0;
+				YunSuFunction_Number = 0;
+				ZhiXiang_Complete_FlagYunSu = 0;
+/////////////////////清除外同步缓存/////////////////////////////////	
+				EXIT_POINT_FLAG = 0;
+				WaiTongBu_step_design_set = 0;
+				WaiTongBu_Start_cnt = 1;
+				WaiTongBu_PanFangXiang = 0;
+				WaiTongBu_Flag_Com_Direction = 1;
+				WaiTongBu_MaiChong_cnt = 0;
+				EXTI2_CNT = 0;
+				ZhiXiang_Complete_FlagLY = 0;
+				
+				EXIT_LianXu_FLAG = 0;
+							EXIT_Song = 0;
+/////////////////////////////////////////////////////////////////////////////////			
+				JiTing_Set_CNT = 0;          //急停计数
+				SpaceSetValueFW = 0;
+				SpaceSetValueFY = 0;
+//			accelerate_limit_1ms = 2;
+//			accelerate_limit = 2000;
+				reset_zero(); //只发一次指令
+				velocity_limit_value_set = 100;
+				accelerate_limit = 1000;
+				output_open_flag = 1;
+				KongJianZhiXiang_FW = 0;
+				KongJianZhiXiang_FY = 0;
+				FW_pointing_degree_set = 0;
+				FY_pointing_degree_set = 0;
+//////////////////////////////归零稳定脉冲/////////////////////////////////////			
+				if((FY_encoder_degrees >= 81.5)&&(FY_encoder_degrees <= 82.5))
+				{
+						if((FW_encoder_degrees >= 337.00)&&(FW_encoder_degrees <= 338.00))   //201.195     201.205
+						{
+								GuiLingFlag++;
+								if(GuiLingFlag == 1)
+								{
+										GPIO_SetBits(GPIOA,GPIO_Pin_6);
+										Delay_us(110);
+										GPIO_ResetBits(GPIOA,GPIO_Pin_6);	
+								}
+								else
+								{
+										GuiLingFlag = 2;
+								}
+						}
+
+				}
+	
+///////////////////////////////////////////////////////////////////////////////////			
+			//励磁
+			//设置方位俯仰零点
+			//开启位置闭环
+			//限速，闭环参数组选1
+//			FW_output_angle_pa_last  = FW_zero_degree_zheng;     //FW_zero_degree_zheng   
+//			FY_output_angle_pa_last  = FY_zero_degree;     //FY_zero_degree
+		}
+
+//7脱靶量跟踪
+		if(system_mode == 7)
+		{
+			JiTing_Set_CNT = 0;          //急停计数
+			last_position_flag = 0;  //跟踪时记录上次位置一次
+//		    if(last_position_flag == 0)
+//			{
+//				last_position_flag = 1;
+//				FW_output_angle_pa_last  = FW_encoder_degrees;     //FW_zero_degree_zheng   
+//				FY_output_angle_pa_last  = FY_encoder_degrees;     //FY_zero_degree
+//			}
+
+//			miss_distance_Y_float = 2.5;      //测试用
+			
+			if(miss_distance_X_float == -1024 || miss_distance_Y_float == -1024)
+			{
+				Mode_Chose = 1;
+				FY_location_loop_open_flag = 1;
+				FW_location_loop_open_flag = 1;
+				FW_light_loop_open_flag = 0;
+				FY_light_loop_open_flag = 0;
+				
+				FW_location_para = 4;  //FW_location_para_set
+				FY_location_para = 4;  //FY_location_para_set
+				
+//				FW_location_para = FW_location_para_set;
+//				FY_location_para = FY_location_para_set;
+				TuoBa_Set_CNT++;
+				if(TuoBa_Set_CNT == 1)
+				{
+					FW_encoder_TuoBa_Set = FW_encoder_degrees;
+					FY_encoder_TuoBa_Set = FY_encoder_degrees;
+				}
+				if(TuoBa_Set_CNT > 1)
+				{
+					TuoBa_Set_CNT = 1;	
+				}
+				FW_location_set = FW_encoder_TuoBa_Set;			
+				FY_Target_Position = FY_encoder_TuoBa_Set;
+				velocity_limit_value_set = 5;	//5
+				accelerate_limit = 1000;
+				output_open_flag = 1;
+
+				
+			}
+			else
+			{
+				TuoBa_Set_CNT = 0;
+				ServoFunction();		
+			}
+					
+			
+
+//			if(FW_LY_CNT >= 990)
+//			{
+//				FW_LY_CNT = 990;
+//			}
+//			FW_LY_CNT++;
+			
+
+		}
+
+//8匀速扫描
+//		if(system_mode == 8) 
+//		{
+//			output_open_flag = 0;
+//			FY_location_loop_open_flag = 0;
+//			FW_location_loop_open_flag = 0;
+//			FW_light_loop_open_flag = 0;
+//			FY_light_loop_open_flag = 0;
+//					
+//			
+////			jisuan_TIME++;
+////			DA12_out(FW_yunsu_sudu,0);
+//			if(Scan_Direction == 0x01)    //向右下扫描
+//			{
+//				FW_Scan_StopAngle = FW_Scan_StartAngle + ScanAngleRang;
+//				if(Flag_Com_Direction == 1)
+//				{
+//					FW_Direction = 1; 
+//					FY_Direction = -1;
+//					FY_pointing_degree_set = 0;
+//				}
+//				Flag_Com_Direction = 0;
+//				WuCha = 0.001;
+////				if((FW_encoder_degrees>=FW_yunsu_StopAngle)&&(FW_Direction == 1))
+//				if((FW_encoder_degrees-FW_zero_degree_zheng)>=((float)FW_Scan_StopAngle - WuCha)&&(FW_Direction == 1))
+//				{
+//					FW_Direction = -1;
+//					yunsu_fu = 0;
+////					FW_yunsu_sudu = -0.1;
+//					FW_yunsu_sudu_1 = FW_yunsu_sudu * (-1);
+////					Time_LY = jisuan_TIME;
+//					FY_pointing_degree_set = (float)FY_ScanAngleRang;            //上正下负
+//				}
+////				if((FW_encoder_degrees<=FW_yunsu_StartAngle)&&(FW_Direction == -1))   //撞左
+//				if((FW_encoder_degrees-FW_zero_degree_zheng)<=((float)FW_Scan_StartAngle + WuCha)&&(FW_Direction == -1))   //撞左
+//				{
+//					FW_Direction = 1;
+//					yunsu_zheng = 0;
+//					FW_yunsu_sudu_1 = FW_yunsu_sudu;
+////					FW_yunsu_sudu = 0.1;
+//					FY_pointing_degree_set = 0;
+//				}
+
+////				if(FW_Direction == 1)
+////				{
+////					FW_yunsu_sudu = FW_yunsu_sudu * (float)FW_Direction;
+////					yunsu_zheng++;
+////					if(yunsu_zheng == 1)
+////					{
+//////						DA12_out(FW_yunsu_sudu,0);
+////					}
+////					if(yunsu_zheng = 3)
+////					{
+////						yunsu_zheng = 2;
+////					}
+////				}
+////				if(FW_Direction == -1)
+////				{	
+////					FW_yunsu_sudu = FW_yunsu_sudu * (float)FW_Direction;
+////					yunsu_fu++;
+////					if(yunsu_fu == 1)
+////					{
+//////						DA12_out(FW_yunsu_sudu,0);
+
+////					}
+////					if(yunsu_fu == 3)
+////					{
+////						yunsu_fu = 2;
+////					}
+
+////				}
+//				
+////				if(Old_yunsu == FW_yunsu_sudu)
+////				{
+////					;
+////				}
+////				else
+////				{
+////					Old_yunsu = FW_yunsu_sudu;
+
+////					if(FY_encoder_degrees > 67)
+////					{
+////						FY_yunsu_sudu_1 = -0.05;
+////					}
+////					if(FY_encoder_degrees < 63)
+////					{
+////						FY_yunsu_sudu_1 = 0.05;
+////					}				
+//					
+//			FY_location_para = FY_location_para_set;
+
+//			FY_pointing_degree_out = FY_zero_degree + FY_pointing_degree_set;            //上正下负
+
+//			FY_location_set = FY_pointing_degree_out;
+
+
+//			//入：FY_location_set设定值  出：FY_revise_out位置环校正值                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+//			fy_close_loop();
+//			//校正值 + 加入前馈速度
+//			if(system_mode == 7)
+//			{
+//				FY_revise_out_speed = FY_revise_out + FY_track_qiankui_speed_k * FY_track_qiankui_speed_lowpass;  //加入前馈速度				
+//			}
+//			else 
+//			{
+//				FY_revise_out_speed = FY_revise_out + FY_wending_qiankui_speed_k * FY_wending_qiankui_speed_lowpass;  //加入前馈速度		
+//			}
+//		
+//			FY_output_value = FY_revise_out_speed;
+//			
+//	
+//			FY_limit_acc_value = limit_accelerate(FY_output_value,FY_output_value_last,accelerate_limit_1ms);
+//			
+//	 
+//			FY_output_value_last = FY_limit_acc_value;
+//			
+//				//限速度
+//			   //限完加速度的速度，限制的速度
+//			FY_limit_acc_value = limit_velocity(FY_limit_acc_value,velocity_limit_value_set);
+
+//	        //速度转输出电压
+//		 
+//			FY_output_value_da = velocity_to_voltage(FY_limit_acc_value ,10.0);	 //原始 
+//					
+//	
+//					
+//					
+//			DA12_out(FW_yunsu_sudu_1,FY_output_value_da);
+//					
+
+////					yunsu_cnt++;
+////				}
+//				
+////				if(Give_Scan_Number != 0)
+////				{
+////					if(Scan_Number == Give_Scan_Number)
+////					{
+////						Scan_Number = 0;
+////						system_mode = 1;
+////					}	
+////				}
+////				else
+////				{
+////						Scan_Number = 0;
+////				}	
+////				
+////			}
+//				
+
+////			if(Scan_Direction == 0x02)    //向左下扫描
+////			{
+////				DA12_out(-FW_yunsu_sudu,-FY_yunsu_sudu);
+////			}
+////			if(Scan_Direction == 0x03)    //向右上扫描
+////			{
+////				DA12_out(FW_yunsu_sudu,FY_yunsu_sudu);
+////			}
+////			if(Scan_Direction == 0x04)    //向左上扫描
+////			{
+////				DA12_out(-FW_yunsu_sudu,FY_yunsu_sudu);
+////			}
+
+////			FW_BuJin_Time_Count++;
+////			FY_location_loop_open_flag = 1;
+////			FW_location_loop_open_flag = 1;
+////			FW_light_loop_open_flag = 0;
+////			FY_light_loop_open_flag = 0;
+////	    output_open_flag = 1;
+////			
+////			FW_location_para = FW_location_para_set;
+////			FY_location_para = FY_location_para_set;
+////		  velocity_limit_value_set = 10;
+////			
+////			
+////			FW_BuJin_Time = FW_BuJin_LiangCheng_Degree * 1000;
+////			FW_BuJin_Time = FW_BuJin_Time/FW_BuJin_SuDu;
+////			FW_BuJin_Time = FW_BuJin_Time/FW_BuJin_Count;
+////			if(FW_BuJin_Time == FW_BuJin_Time_Count)
+////			{
+////				FW_BuJin_Flag++;
+////				FY_BuJin_Flag++;
+////				BuJinSaoMiao();
+////				FW_BuJin_Time_Count = 0;
+////			}
+//		
+//		}		
+//	}	
+		
+//9外同步扫描
+		
+
+		if(system_mode == 9) 
+		{
+			
+			
+			JiTing_Set_CNT = 0;          //急停计数
+			if(diaoyong_cnt == 3300)
+			{
+				diaoyong_cnt = 0;
+			}
+//			step_open_flag = 2;
+			if(EXTI2_FLAG == 1)
+			{			
+//				WaiTong_CNT++;
+//				if(WaiTong_CNT == 1)
+//				{
+//					step_open_flag = 2;
+//				}
+//				if(WaiTong_CNT == 2)
+//				{
+//					step_open_flag = 0;
+//				}
+//				if(WaiTong_CNT == 4)
+//				{
+//					WaiTong_CNT = 3;
+//				}
+				
+				MaiChong_cnt++;
+//				diaoyong_cnt++;
+				EXTI2_FLAG = 0;
+				FY_location_loop_open_flag = 1;
+				FW_location_loop_open_flag = 1;
+				FW_light_loop_open_flag = 0;
+				FY_light_loop_open_flag = 0;
+				
+				FW_location_para = 4;
+				FY_location_para = FY_location_para_set;
+				velocity_limit_value_set = 1000;
+				accelerate_limit = 10000;
+				
+				space_scan();
+				step_open_flag = 2;
+				
+				if(step_open_flag == 2)
+				{				
+			
+
+					diaoyong_cnt++;
+			
+			
+//			Time_Long = 110;
+//			ScanAngleRang = 6;
+//			FW_ScanStepLength = 2;
+			Scan_StepCount = ScanAngleRang/FW_ScanStepLength-1;
+//			FW_Scan_StartAngle = 0;
+//			Scan_Direction = 1;     
+//			FW_Scan_StopAngle = 0;
+//			FW_Direction = 0;           //右+1  左-1
+//			FY_Direction = 0;          //上+1   下-1
+//			Flag_Com_Direction = 1;		
+			if(Scan_Direction == 0x01)    //向右下扫描
+			{
+				FW_Scan_StopAngle = FW_Scan_StartAngle + ScanAngleRang;
+				if(Flag_Com_Direction == 1)
+				{
+					FW_Direction = 1; 
+					FY_Direction = -1;
+				}
+				Flag_Com_Direction = 0;
+					
+				Cha = FW_encoder_degrees-FW_zero_degree_zheng;
+				WuCha = 0.001;
+				if((FW_encoder_degrees-FW_zero_degree_zheng)>=((float)FW_Scan_StopAngle - WuCha)&&(FW_Direction == 1))     //撞右
+				{
+					FW_Direction = -FW_Direction;
+					diaoyong_cnt = 0;
+			        MaiChong_cnt = 1;
+//					FY_Scan_Zhixing = (float)FY_Scan_StartAngle - (float)FY_ScanAngleRang;
+//					FY_location_set = FY_Scan_Zhixing;
+//                    FY_pointing_degree_out = FY_location_set;
+					FY_pointing_degree_set = (float)FY_ScanAngleRang;            //上正下负	
+				}
+				if((FW_encoder_degrees-FW_zero_degree_zheng)<=((float)FW_Scan_StartAngle + WuCha)&&(FW_Direction == -1))   //撞左
+				{
+					FW_Direction = -FW_Direction;
+					diaoyong_cnt = 0;
+					MaiChong_cnt = 1;
+					Scan_Number++;
+//					FY_location_set = (float)FY_zero_degree + (float)FY_ScanAngleRang;
+//					FY_location_set = (float)FY_zero_degree;
+//					FY_location_set = (float)FY_Scan_StartAngle;	
+//					FY_pointing_degree_out = FY_location_set;
+	                FY_pointing_degree_set = 0;
+
+				}
+				if(FW_Direction == 1)
+				{
+					step_design_set = (float)MaiChong_cnt*FW_ScanStepLength*(float)FW_Direction +(float)FW_Scan_StartAngle;
+				}
+				if(FW_Direction == -1)
+				{
+					step_design_set = (float)MaiChong_cnt*FW_ScanStepLength*(float)FW_Direction + (float)FW_Scan_StopAngle ;
+				}
+//				step_design_set = -step_design_set;
+				FW_pointing_degree_set = step_design_set;
+//				if(Give_Scan_Number != 0)
+//				{
+//					if(Scan_Number == Give_Scan_Number)
+//					{
+//						Scan_Number = 0;
+//						system_mode = 1;
+//					}	
+//				}
+//				else
+//				{
+//						Scan_Number = 0;
+//				}	
+				
+			}
+//			
+// ///////////////////////////////////////////////////////////////////////////////////////////////////
+//				if(Scan_Direction == 0x02)    //向左下扫描
+//				{
+//					FW_Scan_StopAngle = FW_Scan_StartAngle - ScanAngleRang;
+//					if(Flag_Com_Direction == 1)
+//					{
+//						FW_Direction = -1; 
+//						FY_Direction = -1;
+//					}
+//					Flag_Com_Direction = 0;
+//					Cha = FW_encoder_degrees-FW_zero_degree_zheng;
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)>=FW_Scan_StartAngle&&(FW_Direction == 1))     //撞右
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						MaiChong_cnt = 0;
+//						Scan_Number++;
+//						FY_location_set = (float)FY_Scan_StartAngle;
+//						
+//					}
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)<=FW_Scan_StopAngle&&(FW_Direction == -1))   //撞左
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						MaiChong_cnt = 0;
+//						FY_Scan_Zhixing = (float)FY_Scan_StartAngle - (float)FY_ScanAngleRang;
+//						FY_location_set = FY_Scan_Zhixing;
+//						
+//					}
+//					if(FW_Direction == 1)
+//					{
+//						step_design_set = (float)MaiChong_cnt*(float)FW_ScanStepLength*(float)FW_Direction;
+//						step_design_set = step_design_set + (float)FW_Scan_StopAngle;
+
+//					}
+//					if(FW_Direction == -1)
+//					{
+//						step_design_set = (float)MaiChong_cnt*FW_ScanStepLength*FW_Direction;
+//						step_design_set = step_design_set + (float)FW_Scan_StartAngle;
+
+//					}
+//					step_design_set = -step_design_set;
+//					if(Give_Scan_Number != 0)
+//					{
+//						if(Scan_Number == Give_Scan_Number)
+//						{
+//							Scan_Number = 0;
+//							system_mode = 1;
+//						}	
+//					}
+//					else
+//					{
+//						Scan_Number = 0;
+//					}		
+//				}
+//				
+//				
+// ///////////////////////////////////////////////////////////////////////////////////////////////////				
+//				if(Scan_Direction == 0x03)    //向右上扫描
+//				{
+//					FW_Scan_StopAngle = FW_Scan_StartAngle + ScanAngleRang;
+//					if(Flag_Com_Direction == 1)
+//					{
+//						FW_Direction = 1; 
+//						FY_Direction = 1;
+//					}
+//					Flag_Com_Direction = 0;
+//					
+//					Cha = FW_encoder_degrees-FW_zero_degree_zheng;
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)>=FW_Scan_StopAngle&&(FW_Direction == 1))     //撞右
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						MaiChong_cnt = 0;
+//						
+//						FY_Scan_Zhixing = (float)FY_Scan_StartAngle + (float)FY_ScanAngleRang;
+//						FY_location_set = FY_Scan_Zhixing;
+
+
+//					}
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)<=FW_Scan_StartAngle&&(FW_Direction == -1))   //撞左
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						Scan_Number++;
+//						MaiChong_cnt = 0;
+//						FY_location_set = (float)FY_Scan_StartAngle;
+//					}
+//					if(FW_Direction == 1)
+//					{
+//						step_design_set = MaiChong_cnt*FW_ScanStepLength*FW_Direction +FW_Scan_StartAngle;
+
+//					}
+//					if(FW_Direction == -1)
+//					{
+//						step_design_set = MaiChong_cnt*FW_ScanStepLength*FW_Direction + FW_Scan_StopAngle ;
+
+//					}
+//					step_design_set = -step_design_set;
+//					if(Give_Scan_Number != 0)
+//					{
+//						if(Scan_Number == Give_Scan_Number)
+//						{
+//							Scan_Number = 0;
+//							system_mode = 1;
+//						}	
+//					}
+//					else
+//					{
+//						Scan_Number = 0;
+//					}	
+//				}
+// ///////////////////////////////////////////////////////////////////////////////////////////////////									
+//				if(Scan_Direction == 0x04)    //向左上扫描
+//				{
+//					FW_Scan_StopAngle = FW_Scan_StartAngle - ScanAngleRang;
+//					if(Flag_Com_Direction == 1)
+//					{
+//						FW_Direction = -1; 
+//						FY_Direction = 1;
+//					}
+//					Flag_Com_Direction = 0;
+//					Cha = FW_encoder_degrees-FW_zero_degree_zheng;
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)>=FW_Scan_StartAngle&&(FW_Direction == 1))     //撞右
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						Scan_Number++;
+//						MaiChong_cnt = 0;
+//						FY_location_set = (float)FY_Scan_StartAngle;
+
+//					}
+//					if((FW_encoder_degrees-FW_zero_degree_zheng)<=FW_Scan_StopAngle&&(FW_Direction == -1))   //撞左
+//					{
+//						FW_Direction = -FW_Direction;
+//						diaoyong_cnt = 0;
+//						MaiChong_cnt = 0;
+//						FY_Scan_Zhixing = (float)FY_Scan_StartAngle + (float)FY_ScanAngleRang;
+//						FY_location_set = FY_Scan_Zhixing;
+
+//					}
+//					if(FW_Direction == 1)
+//					{
+//						step_design_set = (float)MaiChong_cnt*(float)FW_ScanStepLength*(float)FW_Direction;
+//						step_design_set = step_design_set + (float)FW_Scan_StopAngle;
+
+//					}
+//					if(FW_Direction == -1)
+//					{
+//						step_design_set = (float)MaiChong_cnt*FW_ScanStepLength*FW_Direction;
+//						step_design_set = step_design_set + (float)FW_Scan_StartAngle;
+
+//					}
+//					step_design_set = -step_design_set;
+//					if(Give_Scan_Number != 0)
+//					{
+//						if(Scan_Number == Give_Scan_Number)
+//						{
+//							Scan_Number = 0;
+//							system_mode = 1;
+//						}	
+//					}
+//					else
+//					{
+//						Scan_Number = 0;
+//					}	
+//				}			
+
+//			FY_location_loop_open_flag = 1;
+//			FW_location_loop_open_flag = 1;
+//			FW_light_loop_open_flag = 0;
+//			FY_light_loop_open_flag = 0;
+			velocity_limit_value_set = 50;
+			FW_location_para = FW_location_para_set;
+			FY_location_para = FY_location_para_set;
+
+            ZhiXiangFlag = 0;
+            SpacePoint();
+			
+//			point_to();   //反复发指令
+			
+//			step_design_arry[diaoyong_cnt] = step_design_set;
+//			step_design_set_prepass = FsmLeadLag1(step_design_set,FSM_X,0); //阶跃前置滤波
+//			step_design_arry_prepass[diaoyong_cnt] = step_design_set_prepass;
+			if(diaoyong_cnt > 100)
+			{
+				diaoyong_cnt = 100;
+			}
+		}
+
+
+			}
+			
+
+//			else
+//			{
+//				step_open_flag = 0;
+//			}
+
+			
+		}	
+//10移植测试稳态		
+		if(system_mode == 10)
+		{				
+			JiTing_Set_CNT = 0;          //急停计数
+			TestFunction();
+			miss_distance_flag = 1;
+		}			
+		
+
+//11空间扫描	
+		if(system_mode == 11)
+		{				
+//			ZhiXiang_Complete_Flag = 0;   //清除空间指向脉冲标志位
+//			ZhiXiang_Complete_FlagLY = 0;//清除外同步脉冲标志位
+			
+			JiTing_Set_CNT = 0;          //急停计数
+//			Scan_cnt_ly++;
+			Scan();
+			if(Scan_cnt_ly == 20000)
+			{
+				Scan_cnt_ly = 0;
+			}
+		}	
+
+
+//12空间匀速扫描		
+		if(system_mode == 12)
+		{				
+//			ZhiXiang_Complete_Flag = 0;   //清除空间指向脉冲标志位
+//			ZhiXiang_Complete_FlagLY = 0;//清除外同步脉冲标志位
+			
+			JiTing_Set_CNT = 0;          //急停计数
+//			YunSu_cnt_ly++;
+			YunSuScan();	
+			if(YunSu_cnt_ly == 20000)
+			{
+				YunSu_cnt_ly = 0;
+			}
+		}	
+//13空间外同步扫描	
+		if(system_mode == 13)
+		{				
+//			ZhiXiang_Complete_Flag = 0;   //清除空间指向脉冲标志位
+			
+			JiTing_Set_CNT = 0;          //急停计数
+			if(Chang_Kp_CNT == 1)
+			{
+				FW_location_kp = 120;
+//				Chang_Kp_CNT++;
+				TX_Servo_Steady_State=0xcc;
+
+			}
+			if(Chang_Kp_CNT == 46)
+			{
+//				FW_location_kp = 200;
+//				TX_Servo_Steady_State=0xaa;
+			
+	//			Chang_Kp_CNT = 0;			
+			}
+			if(Chang_Kp_CNT == 65)
+			{
+				TX_Servo_Steady_State=0xaa;
+			}
+			if(Chang_Kp_CNT == 104)
+			{
+				Chang_Kp_CNT = 0;
+//				FW_location_kp = 120;
+			}
+			ExitTongBu();		
+		}			
+		
+//14空间指向
+		if(system_mode == 14) //指向（零点暂时下位机自己设置，set值由上位机设置，其它不需要动）
+		{
+			JiTing_Set_CNT = 0;          //急停计数
+			last_position_flag = 0;
+//			ZhiXiang_Complete_FlagLY = 0;//清除外同步脉冲标志位
+			
+			ZhiXiangFlag = 1;
+			///////////////////////////////////空间指向方位/////////////////////////////////			
+//			KongJianZhiXiang_CNT++;
+			if(KongJianZhiXiang_FW > SpaceSetValueFW)
+			{				
+				SpaceSetValueFW = SpaceSetValueFW + 0.01;
+                ZhiXiang_Complete_Flag = 0;				
+			}
+			//if(SpaceSetValueFW >= KongJianZhiXiang_FW)
+			if(((KongJianZhiXiang_FW - SpaceSetValueFW)>-0.01)&&((KongJianZhiXiang_FW - SpaceSetValueFW)<0.01))
+			{
+				SpaceSetValueFW = KongJianZhiXiang_FW;				
+			}
+			
+			if(KongJianZhiXiang_FW < SpaceSetValueFW)
+			{				
+				SpaceSetValueFW = SpaceSetValueFW - 0.01;
+                ZhiXiang_Complete_Flag = 0;					
+			}
+			if(((KongJianZhiXiang_FW - SpaceSetValueFW)>-0.01)&&((KongJianZhiXiang_FW - SpaceSetValueFW)<0.01))
+			//if(SpaceSetValueFW <= KongJianZhiXiang_FW)
+			{
+				SpaceSetValueFW = KongJianZhiXiang_FW;
+			}
+///////////////////////////////////空间指向俯仰/////////////////////////////////				
+			if(KongJianZhiXiang_FY > SpaceSetValueFY)
+			{				
+				SpaceSetValueFY = SpaceSetValueFY + 0.01;
+				ZhiXiang_Complete_Flag = 0;					
+			}
+			if(((KongJianZhiXiang_FY - SpaceSetValueFY)>-0.01)&&((KongJianZhiXiang_FY - SpaceSetValueFY)<0.01))
+			//if(SpaceSetValueFY >= KongJianZhiXiang_FY)
+			{
+				SpaceSetValueFY = KongJianZhiXiang_FY;
+			}
+			
+			if(KongJianZhiXiang_FY < SpaceSetValueFY)
+			{				
+				SpaceSetValueFY = SpaceSetValueFY - 0.01;
+				ZhiXiang_Complete_Flag = 0;					
+			}
+			//if(SpaceSetValueFY <= KongJianZhiXiang_FY)
+			if(((KongJianZhiXiang_FY - SpaceSetValueFY)>-0.01)&&((KongJianZhiXiang_FY - SpaceSetValueFY)<0.01))
+			{
+				SpaceSetValueFY = KongJianZhiXiang_FY;
+			}
+			SpacePoint();
+		
+		}
+//17轴上指向(编码器指向)
+		if(system_mode == 17)
+		{
+			Mode_Chose = 1;
+			JiTing_Set_CNT = 0;          //急停计数
+			last_position_flag = 0;  //跟踪时记录上次位置一次
+			KongJianPoin_flag = 0;
+			ZhiXiangFlag = 2;
+			if(start_flat == 1)//start_flat = 0;
+			{
+					if(start_CNT < 101)
+					{
+						Point_FY_set_prepass = Position_begin + 0;//Position_begin = 0;
+					}
+					if(start_CNT == 101)
+					{
+						Point_FY_set_prepass = Position_begin + 0.010;
+					}
+					if(start_CNT == 201)
+					{
+						start_CNT = 0;
+					}
+					start_CNT++;
+
+					if(FW_LY_CNT >= 990)
+					{
+						FW_LY_CNT = 990;
+					}
+					FW_LY_CNT++;	
+			}						
+			SpacePoint();
+		}		
+//18 方位扫频		
+		if(system_mode == 18)           
+		{
+			FW_pointing_degree_LY = OutSpeedAmp * sin( 2 * 3.1415 * OutSpeedFrequency * OutSpeedCnt / 1000);
+			SpacePoint();
+			
+			OutSpeedCnt++;
+			CntFW++;
+			if(CntFW >= 1000)
+			{
+				CntFW = 0;
+			}
+			
+			SpeedNowFW = FW_encoder_degrees - FW_zero_degree_zheng;
+			
+			if(SpeedNowFW > MaxPosition)
+			{
+				MaxPosition = SpeedNowFW;
+			}
+			if(SpeedNowFW < MinPosition)
+			{
+				MinPosition = SpeedNowFW;
+			}
+			if(OutSpeedCnt >= 1000.0f / OutSpeedFrequency)
+			{
+				OutSpeedCnt = 0;
+				if(OutCount > 3)
+				{
+					SpeedBode[FrequencyCnt] = (MaxPosition - MinPosition) / 2.0f;
+//					SpeedBode[FrequencyCnt] = SpeedRMS;
+					MaxPosition = 0;
+					MinPosition = 0;
+					FrequencyCnt++;
+					OutSpeedFrequency = OutSpeedFrequency * 1.4142136f;
+					OutCount = 0;
+				}
+				OutCount++;
+				if(OutSpeedFrequency > 100.0f)
+				{
+					OutSpeedAmp = 0;
+					FrequencyCnt = 0;
+					OutSpeedFrequency = 0.05;
+					system_mode = 1;
+					CntFW = 0;
+					OutCount = 0;
+				}
+				
+			}
+			
+		}
+//19 俯仰扫频		
+		if(system_mode == 19)            
+		{
+			Mode_Chose = 2;
+			FY_Speed_Position = OutSpeedAmp * sin( 2 * 3.1415 * OutSpeedFrequency * OutSpeedCnt / 1000);
+			
+			
+			OutSpeedCnt++;
+			CntFW++;
+			if(CntFW >= 1000)
+			{
+				CntFW = 0;
+			}
+			
+			SpeedNowFW = FY_485_SpeedFloat;
+			
+			if(SpeedNowFW > MaxPosition)
+			{
+				MaxPosition = SpeedNowFW;
+			}
+			if(SpeedNowFW < MinPosition)
+			{
+				MinPosition = SpeedNowFW;
+			}
+			if(OutSpeedCnt >= 1000.0f / OutSpeedFrequency)
+			{
+				OutSpeedCnt = 0;
+				if(OutCount > 3)
+				{
+					SpeedBode[FrequencyCnt] = (MaxPosition - MinPosition) / 2.0f;
+//					SpeedBode[FrequencyCnt] = SpeedRMS;
+					MaxPosition = 0;
+					MinPosition = 0;
+					FrequencyCnt++;
+					OutSpeedFrequency = OutSpeedFrequency * 1.4142136f;
+					OutCount = 0;
+				}
+				OutCount++;
+				if(OutSpeedFrequency > 100.0f)
+				{
+					OutSpeedAmp = 0;
+					FrequencyCnt = 0;
+					OutSpeedFrequency = 0.05;
+					system_mode = 1;
+					CntFW = 0;
+					OutCount = 0;
+				}
+				
+			}
+			
+		}
+//20 相机设置		
+		if(system_mode == 20)            
+		{
+			if(Camer_Set_CNT == 1)
+			{
+				Threshold=Threshold_temp;					//阈值赋值
+				Exposure_Time=Exposure_Time_temp;			//曝光时间赋值		
+				X_Length_Setting=X_Length_Setting_temp;		//窗口X长度赋值
+				Y_Length_Setting=Y_Length_Setting_temp;		//窗口Y长度赋值
+				Windows_Switch=Windows_Switch_temp;			//窗口设置  1：小窗口   0：大窗口
+			
+				Camera_Config_cnt++;
+				if(Camera_Config_cnt==10)
+				{
+					Camera_Param_Set(Threshold_Addr,Threshold,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==20)
+				{
+					Camera_Param_Set(Exposure_Time_Addr2,Exposure_Time>>16,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==30)
+				{
+					Camera_Param_Set(Exposure_Time_Addr1,Exposure_Time,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==40)
+				{
+					Camera_Param_Set(X_Length,X_Length_Setting,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==50)
+				{
+					Camera_Param_Set(Y_Length,Y_Length_Setting,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==60)
+				{
+					Camera_Param_Set(Small_Window_Switch,Windows_Switch,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==70)
+				{
+					Camera_Param_Set(X_Migration_Addr,X_Migration,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==80)
+				{
+					Camera_Param_Set(Y_Migration_Addr,Y_Migration,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt==90)
+				{
+					Camera_Param_Set(Save_Configuration_Addr,0,CAM_Data);
+					Camera_Write(CAM_Data,16);
+				}
+				if(Camera_Config_cnt>=100)
+				{
+					Camera_Config_cnt=0;
+					Camer_Set_CNT = 0;
+				}
+
+			}
+		}
+//21 扫描设置	(环形走位设置)
+		if(system_mode == 21)
+		{
+				if(counter_data==1)
+				{
+					SaoMiao_Init();	
+				}
+				else
+				{
+					counter1++;
+					if(counter1==100)	//延时100MS
+					{
+						counter_j++;
+						if(counter_j >= n_LYJ)
+						{
+							counter_j = n_LYJ-1;
+						}
+						counter1=0; 
+						Mode_Chose = 1;
+						JiTing_Set_CNT = 0;          //急停计数
+						last_position_flag = 0;  //跟踪时记录上次位置一次
+						KongJianPoin_flag = 0;
+						ZhiXiangFlag = 2;				
+										
+						FW_pointing_degree_LY=ab[counter_j][0];		 //方位角
+				    Point_FY_set_prepass=ab[counter_j][1];		 //俯仰角
+				
+						SpacePoint();
+					}	
+				}	
+		}	
+//自动扫描跟踪		
+		if(system_mode == 22)
+		{
+				if(counter_data==1)
+				{
+					FY_zero_degree1_zheng=298.25 - FY_encoder_degrees;
+					FW_zero_degree1_fu=361 - FW_encoder_degrees;
+					SaoMiao_Init();
+				}
+				else
+				{
+					counter1++;
+					if(counter1==100)	//延时100MS
+					{
+						counter_j++;
+						if(counter_j >= n_LYJ)
+						{
+							counter_j = n_LYJ-1;
+						}
+						counter1=0; 
+						Mode_Chose = 1;
+						JiTing_Set_CNT = 0;          //急停计数
+						last_position_flag = 0;  //跟踪时记录上次位置一次
+						KongJianPoin_flag = 0;
+						ZhiXiangFlag = 2;				
+										
+						FW_pointing_degree_LY=ab[counter_j][0];		 //方位角
+				    Point_FY_set_prepass=ab[counter_j][1];		 //俯仰角
+				
+						SpacePoint();
+						if(((miss_distance_X_float <= 600) && (miss_distance_X_float >= -600))&&((miss_distance_Y_float <= 600) && (miss_distance_Y_float >= -600)))
+						{
+//								system_mode=1;
+//								counter2++;
+//								if(counter2==5)
+//								{
+										system_mode=7;
+//										counter2=0;
+//								}
+						}
+					}	
+				}	
+		}
+		/////////////////俯仰电机选择位置环、速度环控制////////////////////////
+		if(system_mode == 7)
+		{
+			Mode_Chose = 2;
+		}
+		else
+		{
+			Mode_Chose = 1;
+		}
+		
+//输出
+		if(output_open_flag == 1)
+		{
+					//光闭环跟踪
+					if(FW_light_loop_open_flag == 1)  
+					{
+							//光闭环输出角度 = 上一刻角度 + 脱靶量校正角度
+							FW_output_angle_pa_now = FW_output_angle_pa_last + FW_light_loop_revise;
+							//设定编码器闭环值（位置环）
+							if(FW_Choose_Mode == 1)
+							{
+									FW_location_set = FW_output_angle_pa_now;//光闭环输出角度
+							}
+							//选择方位速度环
+							else
+							{
+									FW_Speed_Position = FW_light_loop_revise;//脱靶量校正角度
+									FW_location_loop_open_flag = 0;//关闭位置闭环
+									BeginMortorFW();
+							}
+							
+							FW_track_qiankui_speed = FW_light_loop_revise * 1000;       
+							FW_track_qiankui_speed_lowpass = FsmLeadLag1(FW_track_qiankui_speed,FSM_X,4);//跟踪速度前馈滤波	 
+							
+							//存储当前角度
+							FW_output_angle_pa_last = FW_output_angle_pa_now;//光闭环输出角度
+							//打开位置闭环
+							FW_location_loop_open_flag = 1;
+					}
+					if(FY_light_loop_open_flag == 1)
+					{
+							//光闭环输出角度 = 上一刻角度 + 脱靶量校正角度
+							FY_output_angle_pa_now = FY_output_angle_pa_last + FY_light_loop_revise;
+							//设定编码器闭环值
+							if(FY_Choose_Mode == 1)
+							{
+									FY_location_set = FY_output_angle_pa_now;//光闭环输出角度
+							}
+							else
+							{
+									FY_Speed_Position = FY_light_loop_revise;//脱靶量校正角度
+									FY_location_loop_open_flag = 0;//关闭位置闭环
+									BeginMortorFY();
+							}	
+		/////////////////////485位置环//////////////////////////////////
+		//				FY_Target_Position = FY_output_angle_pa_now;
+									
+		/////////////////////485速度环/////////////////////////////////
+		//                FY_Speed_Position = (FY_output_angle_pa_now - FY_output_angle_pa_last) * 1000;
+		//                 FY_Speed_Position = FY_light_loop_revise;
+						
+							FY_track_qiankui_speed = FY_light_loop_revise * 1000;       
+							FY_track_qiankui_speed_lowpass = FsmLeadLag1(FY_track_qiankui_speed,FSM_Y,4);     //跟踪速度前馈滤波	 
+							
+							//存储当前角度
+							FY_output_angle_pa_last = FY_output_angle_pa_now;//光闭环输出角度
+							//打开位置闭环
+							FY_location_loop_open_flag = 1;
+					}
+
+//前馈滤波
+				//位置闭环
+				if(FY_location_loop_open_flag == 1) 
+				{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+						fy_close_loop();//校正函数
+						BeginMortorFY();//限速函数
+						FY_location_last = FY_location_set;//编码器闭环设定值322.8715
+				}
+			
+//			if(FY_location_loop_open_flag == 1) 
+//			{
+
+//					Write_485_CNT++;
+//					if(Write_485_CNT  == 10)
+//					{
+//						FY_485control();
+//						Write_485_CNT = 0;
+//					}	
+//                    FY_location_last = FY_encoder_degrees;					
+//			}
+				Delay_us(10);
+				
+				if(FW_location_loop_open_flag == 1) //打开位置闭环
+				{
+						fw_close_loop();
+						BeginMortorFW();
+						FW_location_last = FW_location_set;//方位设定值203.6674
+				}	
+		}
+		
+		if(system_mode == 14)
+		{
+//////////////////////////////////指向稳定后发一次脉冲/////////////////////////////////
+			if((SpaceSetValueFY == KongJianZhiXiang_FY) && (SpaceSetValueFW == KongJianZhiXiang_FW))
+			{
+				ZhiXiang_Complete_Flag++;
+				if(ZhiXiang_Complete_Flag == 1)
+				{
+					GPIO_SetBits(GPIOA,GPIO_Pin_6);
+					Delay_us(110);
+					GPIO_ResetBits(GPIOA,GPIO_Pin_6);
+				}
+				else
+				{
+					ZhiXiang_Complete_Flag = 2;
+				}
+			}
+/////////////////////////////////////////////////////////////////////////////////////////	
+		}			
+//	    GPIO_ResetBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+		
+
+//        if(miss_distance_X_float >= 1024 || miss_distance_X_float <= -1024)
+//		{
+//			miss_distance_X_float = 0;
+//		}			
+		
+//		FW_send_array[0] = y_axis_velocity_float;		
+		
+		//////////////////////董老师新公式轴上到空间////////////////////////////////////
+	
+//		FW_New_BM = FW_encoder_degrees - 	FW_zero_degree_zheng;
+//		FY_New_BM = FY_encoder_degrees - FY_zero_degree;
+//		inAngle.Pitch =  pitch_attitude_float;
+//		inAngle.Yaw = yaw_attitude_float;
+//		inAngle.Roll = -roll_attitude_float;
+//	
+//		TwoAngle axisAngle;
+//		TwoAngle spaceAngle;
+//		axisAngle.Azimuth = FW_New_BM;
+//		axisAngle.Pitch = (FY_New_BM * 2) + 14.99;
+//		AskConvMatrix((float)-14.99);		
+//		spaceAngle = ConvertAxis2IN(axisAngle);		
+
+//		FW_Space = spaceAngle.Azimuth;
+//		FY_Space = spaceAngle.Pitch;		
+//		
+//    Space_FY = FW_Space;
+//    Space_FW = FY_Space;	
+		
+		//////////////////////赵老师公式轴上到空间////////////////////////////////////		
+		
+		if(FY_encoder_degrees <= 20 || FY_encoder_degrees >= 340)
+		{
+			FY_Speed_Position = 0;
+		}
+		
+		
+		
+		
+		FW_send_array[0] = miss_distance_X_float;
+		FW_send_array[1] = FY_miss_distance_sub;
+		FW_send_array[2] = FW_location_loop_error;	
+		FW_send_array[3] = Z_slave_1ms_distance_sum;	 //	Z_slave_1ms_distance_sum = 方位积分  
+		FW_send_array[4] = pitch_attitude_float;
+		FW_send_array[5] = FY_encoder_degrees;
+//		FW_send_array[5] = watch_error_ly;
+//		FW_send_array[6] = FW_rms_ave;
+//		FW_send_array[7] = FW_actual_rms_ave;
+		FW_send_array[8] = miss_distance_X_float_ave * ave_k;
+
+
+//		FW_send_array[0] = miss_distance_X_float;		//方位脱靶量 0
+//		FW_send_array[1] = roll_attitude_float;         //横滚姿态   1
+//		FW_send_array[2] = x_axis_velocity_float;	    //俯仰速度   2
+//		FW_send_array[3] = pitch_attitude_float;	    //俯仰姿态   3
+//		FW_send_array[4] = z_axis_velocity_float;       //方位速度   4
+//		FW_send_array[5] = yaw_attitude_float;          //方位姿态   5
+//		FW_send_array[6] = miss_distance_X_float_ave;   //阶跃测试方位 6
+//		FW_send_array[7] = FY_miss_distance_sub;        //俯仰帧间误差 7
+//		FW_send_array[8] = PT_FY_miss_distance_sub;     //10ms俯仰帧间误差 8
+		
+		
+		
+		
+		 
+//		FY_send_array[0] = X_slave_1ms_distance_sum;	//俯仰积分位置	 0
+//		FY_send_array[1] = Z_slave_1ms_distance_sum;    //方位积分位置	 1
+//	    FY_send_array[2] = miss_distance_Y_float;       //俯仰脱靶量     2
+//	    FY_send_array[3] = FY_location_set;             //俯仰输出值     3
+//        FY_send_array[4] = FW_location_set;		//	方位输出值    4
+//		FY_send_array[5] = FW_encoder_degrees;		//	方位编码器值    5
+//		FY_send_array[0] = x_axis_velocity_float;		
+		FY_send_array[0] = miss_distance_Y_float;
+		FY_send_array[1] = FW_miss_distance_sub;
+	    FY_send_array[2] = miss_distance_X_float;
+	    FY_send_array[3] = X_slave_1ms_distance_sum;
+        FY_send_array[4] = FY_encoder_degrees;		//	X_slave_1ms_distance_sum = 俯仰积分
+//		GPIO_ResetBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+		//azimuth = yaw_attitude_float, pitch = pitch_attitude_float, roll = roll_attitude_float, AxisPh = FW_encoder_degrees,AxisFy = FY_encoder_degrees
+				
+		
+		GXKJ_FW = FW_zero_degree_zheng - FW_encoder_degrees;
+		GXKJ_FY = (FY_zero_degree - FY_encoder_degrees) * (-1);
+		
+
+//		CalculatesLocation(yaw_attitude_float, -pitch_attitude_float, -roll_attitude_float, GXKJ_FW, GXKJ_FY,NewAngle);
+//		CalculatesLocation(yaw_attitude_float, pitch_attitude_float, roll_attitude_float, GXKJ_FW, GXKJ_FY, NewAngle);
+		AB_TX();
+		Test_Scan_Send();
+//		rIQ(0x37f);
+//		rIQ_FW(0x37f);
+//		WD_FW_Read(0x37f);
+//		WD_FY_Read(0x37f);
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+		fpgaUpdateFlag = TEST_ReadDataFlag;           //读精跟踪返回标志位
+		if (fpgaUpdateFlag & 0x04)
+		{			
+			read_JingGenZong_Data();
+			JiaoYan_Read_Data();
+			JingGenZong_Flag=0;
+			
+			
+			
+//			if(Send_Flag == 1)
+//			{
+//				if (CommandNew == 0x3c)                                   //采集命令向上位机应答
+//				{			
+//					CaiJiMingLing_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x30)                                   //自检命令向上位机应答
+//				{			
+//					ZiJian_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x32)                                   //状态查询命令上位机应答
+//				{
+//					ZhuangTaiChaXun_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x34)                                   //指向命令上位机应答
+//				{
+//					ZhiXiang_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x35)                                   //步进扫描命令应答
+//				{
+//					BuJinSaoMiao_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x36)                                   //跟踪命令应答
+//				{
+//					GenZong_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x37)                                   //匀速扫描命令应答
+//				{
+//					YunSuSaoMiao_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x38)                                   //回零命令应答
+//				{
+//					HuiLing_YingDa();
+//					Send_Flag = 0;
+//				}
+//				if (CommandNew == 0x39)                                   //急停命令应答
+//				{
+//					JiTing_YingDa();
+//					Send_Flag = 0;
+//				}	
+//				Send_Flag = 0;
+//			}
+
+		}
+		if(JingGenZong_Flag>10)
+			JingGenZong_Err=1;
+		else {JingGenZong_Err=0;JingGenZong_Flag++;}
+		
+	//	GPIO_ResetBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+	}
+
+//	RMS2_weihudu_X=RMS2_vol1(miss_distance_X_float); 
+//	RMS2_weihudu_X=RMS2_vol2(miss_distance_Y_float);
+	
+	TIM_ClearITPendingBit(TIM10,TIM_IT_Update);    //清除中断标志位
+//	TIM_ClearITPendingBit(TIM3, TIM_IT_Update); 
+}
+
+////////////////////////////////////////↓↓↓子函数↓↓↓////////////////////////////////////////////////////////////////////////
+//读取俯仰编码器
+void read_FY_encoder(void)            
+{
+	if((TEST_ReadDataFlag&0x0200) == 0x0200)
+	{		
+		FY_encoder_l = *(uint32_t*)(((u32)(0x64009200)));
+		FY_encoder_h = *(uint32_t*)(((u32)(0x64009300)));
+		FY_encoder_u32 = FY_encoder_l + (FY_encoder_h <<16);
+		low_2bit_FY = FY_encoder_u32 & 0x00000003;
+		FY_encoder_u32 = FY_encoder_u32 >> 2;
+	    FY_encoder_degrees = FY_encoder_u32 / 186413.6;
+//		if(system_mode == 10)
+//		{
+			FY_encoder_degrees_lowpass = FsmLeadLag1(FY_encoder_degrees,FSM_Y,1);      //一阶滞后校正80Hz滤波
+//		}
+//		else
+//		{
+//		    FY_encoder_degrees_lowpass = FY_encoder_degrees;
+//		}
+
+		FY_encoder_Flag=1;
+	}
+	else
+	{
+		FY_encoder_Flag=2;
+	}
+}
+
+//读取方位编码器
+void read_FW_encoder(void)            
+{
+	if((TEST_ReadDataFlag&0x0100) == 0x0100)
+	{		
+		FW_encoder_l = *(uint32_t*)(((u32)(0x64009000)));
+		FW_encoder_h = *(uint32_t*)(((u32)(0x64009100)));
+		FW_encoder_u32 = FW_encoder_l + (FW_encoder_h <<16);
+//		low_2bit_FW = FW_encoder_u32 & 0x00000003;
+		FW_encoder_u32 = FW_encoder_u32 >> 2;
+	    FW_encoder_degrees = FW_encoder_u32  / 186413.6;
+		if(FW_encoder_degrees<140) FW_encoder_degrees= FW_encoder_degrees + 360;
+		FW_encoder_Flag=1;
+		FW_encoder_degrees_lowpass = FsmLeadLag1(FW_encoder_degrees,FSM_X,1);      //一阶滞后校正80Hz滤波
+		FW_encoder_degrees_lowpass = FW_encoder_degrees;
+	}
+	else
+	{
+		FW_encoder_Flag=2;
+	}
+}
+
+void read_M1tuoluo(void)            
+{
+	if((TEST_ReadDataFlag&0x0004) == 0x0004)
+	{		
+		u8 usart_3_num = 0;
+		FPGA_READ_TEST_ADDR = PFPGA_WRITE_USART3;
+		for(usart_3_num=0;usart_3_num<9;usart_3_num++)
+		{
+			read_usart3[usart_3_num] = *(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+		}
+		if(read_usart3[0] == 0x80)
+		{
+			IMU_bit1 = (read_usart3[1])&0x7F; 
+			IMU_bit2 = (read_usart3[2])&0x7F; 
+			IMU_bit3 = (read_usart3[3])&0x7F; 
+			IMU_bit4 = (read_usart3[4])&0x7F; 
+			IMU_bit5 = (read_usart3[5])&0x7F;
+	        IMU_bit_u32 = (IMU_bit5<<28)|(IMU_bit4<<21)|(IMU_bit3<<14)|(IMU_bit2<<7)|IMU_bit1;		
+            IMU_bit_int = IMU_bit_u32;	
+            IMU_bit_float = IMU_bit_int	* 0.0001;
+			
+			//IMU_bit_float_lowpass = FsmLeadLag1(IMU_bit_float,0,4);  
+		}
+	}
+}
+
+void read_labview_set(void)
+{
+	if((TEST_ReadDataFlag&0x0008) == 0x0008)
+	{
+		u8 usart_4_num = 0;		
+		FPGA_READ_TEST_ADDR = PFPGA_WRITE_USART4;
+		for(usart_4_num=0;usart_4_num<196;usart_4_num++)	 //比FE大1
+		{
+			read_usart4[usart_4_num] = *(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+		}
+		//if((read_usart4[0] == 0x55)&&(read_usart4[1] == 0xAA)&&(read_usart4[119] == 0xFE))
+		if((read_usart4[0] == 0x55)&&(read_usart4[1] == 0xAA)&&(read_usart4[195] == 0xFE))   //FE协议前数字编号一致
+		{
+//			FW_location_loop_k = Ary4ToFloat(read_usart4[6],read_usart4[5],read_usart4[4],read_usart4[3]);               
+//			FW_location_loop_k_1 = Ary4ToFloat(read_usart4[10],read_usart4[9],read_usart4[8],read_usart4[7]); 
+//			FW_location_loop_k_2 = Ary4ToFloat(read_usart4[14],read_usart4[13],read_usart4[12],read_usart4[11]); 
+
+//			FY_location_loop_k = Ary4ToFloat(read_usart4[18],read_usart4[17],read_usart4[16],read_usart4[15]);
+//			FY_location_loop_k_1 = Ary4ToFloat(read_usart4[22],read_usart4[21],read_usart4[20],read_usart4[19]);
+//			FY_location_loop_k_2 = Ary4ToFloat(read_usart4[26],read_usart4[25],read_usart4[24],read_usart4[23]);
+//			
+//			FW_wending_yijie_tao = Ary4ToFloat(read_usart4[30],read_usart4[29],read_usart4[28],read_usart4[27]);
+//			FW_wending_yijie_T = Ary4ToFloat(read_usart4[34],read_usart4[33],read_usart4[32],read_usart4[31]);
+//			FY_wending_yijie_tao = Ary4ToFloat(read_usart4[38],read_usart4[37],read_usart4[36],read_usart4[35]);
+//			FY_wending_yijie_T = Ary4ToFloat(read_usart4[42],read_usart4[41],read_usart4[40],read_usart4[39]);
+//			
+//			FW_wending_erjie_tao = Ary4ToFloat(read_usart4[46],read_usart4[45],read_usart4[44],read_usart4[43]);
+//			FW_wending_erjie_T = Ary4ToFloat(read_usart4[50],read_usart4[49],read_usart4[48],read_usart4[47]);
+//			FY_wending_erjie_tao = Ary4ToFloat(read_usart4[54],read_usart4[53],read_usart4[52],read_usart4[51]);
+//			FY_wending_erjie_T = Ary4ToFloat(read_usart4[58],read_usart4[57],read_usart4[56],read_usart4[55]);
+//			
+//			FW_lowpass = Ary4ToFloat(read_usart4[62],read_usart4[61],read_usart4[60],read_usart4[59]);
+//          FY_lowpass = Ary4ToFloat(read_usart4[66],read_usart4[65],read_usart4[64],read_usart4[63]);
+//			
+//			FW_wending_qiankui_speed_k = Ary4ToFloat(read_usart4[70],read_usart4[69],read_usart4[68],read_usart4[67]);
+//          FY_wending_qiankui_speed_k = Ary4ToFloat(read_usart4[74],read_usart4[73],read_usart4[72],read_usart4[71]);  
+//			
+//			FW_wending_qiankui_lvbo = Ary4ToFloat(read_usart4[78],read_usart4[77],read_usart4[76],read_usart4[75]);
+//			FY_wending_qiankui_lvbo = Ary4ToFloat(read_usart4[82],read_usart4[81],read_usart4[80],read_usart4[79]);
+
+//			FW_pre_lvbo = Ary4ToFloat(read_usart4[86],read_usart4[85],read_usart4[84],read_usart4[83]);
+//			FY_pre_lvbo = Ary4ToFloat(read_usart4[90],read_usart4[89],read_usart4[88],read_usart4[87]);
+			
+			FW_light_loop_k = Ary4ToFloat(read_usart4[94],read_usart4[93],read_usart4[92],read_usart4[91]);
+//			FW_light_loop_k_1 = Ary4ToFloat(read_usart4[98],read_usart4[97],read_usart4[96],read_usart4[95]);
+			FW_light_loop_k_2 = Ary4ToFloat(read_usart4[102],read_usart4[101],read_usart4[100],read_usart4[99]);
+			
+			FY_light_loop_k = Ary4ToFloat(read_usart4[106],read_usart4[105],read_usart4[104],read_usart4[103]);
+//			FY_light_loop_k_1 = Ary4ToFloat(read_usart4[110],read_usart4[109],read_usart4[108],read_usart4[107]);
+			FY_light_loop_k_2 = Ary4ToFloat(read_usart4[114],read_usart4[113],read_usart4[112],read_usart4[111]);
+
+//			FW_track_yijie_tao_servo = Ary4ToFloat(read_usart4[118],read_usart4[117],read_usart4[116],read_usart4[115]);  
+//			FW_track_yijie_T_servo = Ary4ToFloat(read_usart4[122],read_usart4[121],read_usart4[120],read_usart4[119]);
+//			FY_track_yijie_tao_servo = Ary4ToFloat(read_usart4[126],read_usart4[125],read_usart4[124],read_usart4[123]);
+//			FY_track_yijie_T_servo = Ary4ToFloat(read_usart4[130],read_usart4[129],read_usart4[128],read_usart4[127]);
+			
+			FW_track_erjie_tao_servo = Ary4ToFloat(read_usart4[134],read_usart4[133],read_usart4[132],read_usart4[131]);  
+			FW_track_erjie_T_servo = Ary4ToFloat(read_usart4[138],read_usart4[137],read_usart4[136],read_usart4[135]);  
+			FY_track_erjie_tao_servo = Ary4ToFloat(read_usart4[142],read_usart4[141],read_usart4[140],read_usart4[139]);  
+			FY_track_erjie_T_servo = Ary4ToFloat(read_usart4[146],read_usart4[145],read_usart4[144],read_usart4[143]);  
+			
+			FW_lowpass_servo = Ary4ToFloat(read_usart4[150],read_usart4[149],read_usart4[148],read_usart4[147]); 
+			FY_lowpass_servo = Ary4ToFloat(read_usart4[154],read_usart4[153],read_usart4[152],read_usart4[151]); 
+			
+			FW_track_qiankui_speed_k = Ary4ToFloat(read_usart4[158],read_usart4[157],read_usart4[156],read_usart4[155]); 
+            FY_track_qiankui_speed_k = Ary4ToFloat(read_usart4[162],read_usart4[161],read_usart4[160],read_usart4[159]); 
+			
+			FW_track_qiankui_lvbo = Ary4ToFloat(read_usart4[166],read_usart4[165],read_usart4[164],read_usart4[163]); 
+            FY_track_qiankui_lvbo = Ary4ToFloat(read_usart4[170],read_usart4[169],read_usart4[168],read_usart4[167]); 
+			
+			system_mode = read_usart4[171];
+			FW_pointing_degree_set = Ary4ToFloat(read_usart4[175],read_usart4[174],read_usart4[173],read_usart4[172]);
+			FY_pointing_degree_set = Ary4ToFloat(read_usart4[179],read_usart4[178],read_usart4[177],read_usart4[176]);
+			
+
+//        	target_select = read_usart4[181];	          //稳定目标选择	
+//			stabilization_select = read_usart4[182];	  //惯导稳定下目标选择
+//			
+//			FW_location_para_set = read_usart4[183];	  
+//      	FY_location_para_set = read_usart4[184];
+            FW_light_para_set = read_usart4[185];	    //
+            FY_light_para_set = read_usart4[186];	
+            stabilize_type_select = read_usart4[187];
+			track_axis_select = read_usart4[188];
+			FW_pi_K = Ary4ToFloat(read_usart4[192],read_usart4[191],read_usart4[190],read_usart4[189]);
+		}
+	}
+}
+void read_LVDS(void)
+{
+	u8 lvds1_num = 0;
+    u8 lvds2_num = 0;
+	if((TEST_ReadDataFlag&0x1000) == 0x1000)
+	{
+		FPGA_READ_TEST_ADDR=PFPGA_WRITE_LVDS+0x100;
+		for(lvds1_num=0;lvds1_num<110;lvds1_num++)
+		{
+			lvds_array1[lvds1_num] = *(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+		}
+	
+	}
+    if((TEST_ReadDataFlag&0x2000) == 0x2000)
+	{	
+	    FPGA_READ_TEST_ADDR=PFPGA_WRITE_LVDS+0x200;
+		for(lvds2_num=0;lvds2_num<110;lvds2_num++)
+		{
+			lvds_array2[lvds2_num] = *(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+		}		
+	}
+}
+
+void write_LVDS(void)
+{
+	u8 TX_DATA=0;
+	u8 lent = 0;
+	u8 testNUM1 = 0;
+		
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x54;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x10;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x17;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x31;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 100;
+		
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x54;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x10;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x17;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x31;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 100;
+		
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x54;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x10;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x17;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x31;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 100;
+	for(testNUM1=0; testNUM1<100; testNUM1++)    //写0x64002000
+	{
+		TX_DATA++;
+		*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= TX_DATA;
+		*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= TX_DATA;
+		*(uint32_t*)(PFPGA_WRITE_LVDS)= TX_DATA;  
+	}
+		
+	lent=11;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= lent;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS)= 0xfe;
+	lent=22;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= lent;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x100)= 0xfe;
+	lent=33;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= lent;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0x5a;
+	*(uint32_t*)(PFPGA_WRITE_LVDS+0x200)= 0xfe;
+}
+
+void read_temperature(void)
+{
+	if((TEST_ReadDataFlag&0x0400) == 0x0400)
+	{
+		FPGA_READ_TEST_ADDR=PFPGA_WRITE_TEMP1;
+	  temp1_u16 =*(uint32_t*)(FPGA_READ_TEST_ADDR);
+		temp1_f=(float)(temp1_u16>>3)*(float)0.0625;
+	}
+	if((TEST_ReadDataFlag&0x0800) == 0x0800)
+	{
+		FPGA_READ_TEST_ADDR=PFPGA_WRITE_TEMP2;
+	    temp2_u16 =*(uint32_t*)(FPGA_READ_TEST_ADDR);
+		temp2_f=(float)(temp2_u16>>3)*(float)0.0625;
+	}
+
+}	
+
+//串口5读取脱靶量
+void read_miss_distance(void)        
+{
+	if((TuoBa_fLAG&0x02) == 0x02)
+	{X1_ly_cnt++;
+		if(X1_ly_cnt == 20)
+		{
+			ZhenPin_1 = Test_ZhenPin_CNT;
+		}
+		if(X1_ly_cnt == 21)
+		{
+			ZhenPin_2 = Test_ZhenPin_CNT;
+		}
+
+		
+		if(huanXiang_flag == 1)
+		{
+
+			if((miss_distance_X_float <= -1024) || (miss_distance_X_float >= 1024))
+			{
+				miss_distance_X_float = 0;
+			}
+				X1_ly[X1_ly_cnt]= miss_distance_X_float;
+//				X1_ly_last = miss_distance_X_float;	
+//				X1_Cha = 
+			    
+			
+				if(X1_ly_cnt == 1200)
+				{
+					X1_ly_cnt = 0;
+				}				
+		}
+		
+		if(huanXiang_flag == 2)
+		{
+				X2_ly_cnt++;
+			
+			
+				if((miss_distance_X_float <= -1024) || (miss_distance_X_float >= 1024))
+				{
+					miss_distance_X_float = 0;
+				}
+				X2_ly[X2_ly_cnt]= miss_distance_X_float;
+				if(X2_ly_cnt == 1200)
+				{
+					X2_ly_cnt = 0;
+				}			
+		}
+		
+		
+		
+		GPIO_ToggleBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+		u8 usart_5_num = 0;
+		PT_CNT++;
+		//GPIO_SetBits(GPIOE,GPIO_Pin_2);
+//		GPIO_ToggleBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+	  FPGA_READ_TEST_ADDR = PFPGA_WRITE_USART5;
+		for(usart_5_num=0; usart_5_num<14; usart_5_num++)
+		{
+	    read_usart5[usart_5_num]=*(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;		
+		}
+		
+			CeShi_CNT++;			
+			ZhenJiShu_ly[1] =  ZhenJiShu_ly[0];
+			ZhenJiShu_ly[0] =  read_usart5[11];
+
+			zjs[CeShi_CNT]=read_usart5[11];
+			if(CeShi_CNT == 999)
+			{
+				CeShi_CNT = 0;
+			}
+
+				if(ZhenJiShu_ly[0] ==  (ZhenJiShu_ly[1] +1) || ZhenJiShu_ly[1] == (ZhenJiShu_ly[0] + 255))
+				{
+					ly_zjs = ly_zjs;
+				}
+				else
+				{
+					ly_zjs++;
+				}
+				
+			if(ly_zjs == 1000)
+			{
+				ly_zjs = 0;
+			}
+		
+		
+		
+		
+//		if(read_usart5[0] == 0x55 && read_usart5[13] == 0xFE)
+//		{
+			miss_distance_judge_X = (read_usart5[3] << 16) + (read_usart5[4] << 8) + read_usart5[5]; 
+			miss_distance_judge_Y = (read_usart5[6] << 16) + (read_usart5[7] << 8) + read_usart5[8];
+			if((miss_distance_judge_X & 0x00800000) == 0)
+			{
+				miss_distance_X = miss_distance_judge_X;
+			}
+			else
+			{
+			    miss_distance_X = miss_distance_judge_X|0xFF000000;
+			}
+			
+			if((miss_distance_judge_Y & 0x00800000) == 0)
+			{
+				miss_distance_Y = miss_distance_judge_Y;
+			}
+			else
+			{
+			    miss_distance_Y = miss_distance_judge_Y|0xFF000000;
+			}
+
+			
+			//X轴脱靶量
+			miss_distance_X_float_LowpassBefore = miss_distance_X / 100.0; //（像素点）
+			miss_distance_X_float_to_angle = miss_distance_X_float * 73.5 * 0.000057295; //（脱靶量转换为度）//14
+//          miss_distance_X_float_to_angle = miss_distance_X_float_to_angle * 0.5;
+			//Y轴脱靶量
+			miss_distance_Y_float_LowpassBefore = miss_distance_Y / 100.0;
+			miss_distance_Y_float_to_angle = miss_distance_Y_float * 73.5 * 0.000057295;
+//			miss_distance_Y_float_to_angle = miss_distance_Y_float_to_angle * 0.5;			
+			
+//			miss_distance_X_float_LowpassBefore = FW_Miss_distance;
+//			miss_distance_Y_float_LowpassBefore = FY_Miss_distance;
+			
+			if(system_mode == 7 || system_mode == 10 )
+			{
+				lowpass_flat = 0;
+			}
+			else
+			{
+				lowpass_flat = 0;
+			}
+			
+			if(lowpass_flat == 1)
+			{
+				FW_miss_distance_lowpass_ly = FsmLeadLag1_servo(miss_distance_X_float_LowpassBefore,FSM_X,1);
+				FY_miss_distance_lowpass_ly = FsmLeadLag1_servo(miss_distance_Y_float_LowpassBefore,FSM_Y,1);
+				miss_distance_X_float = FW_miss_distance_lowpass_ly;
+				miss_distance_Y_float = FY_miss_distance_lowpass_ly;
+			}
+			else
+			{
+				miss_distance_X_float = miss_distance_X_float_LowpassBefore;
+				miss_distance_Y_float = miss_distance_Y_float_LowpassBefore;
+			}
+			
+			if( (-1020 <= miss_distance_X_float) &&  (miss_distance_X_float <= 1020))
+			{
+				miss_Watch_CNT++;
+//				ly_distance_X_last = miss_distance_X_float;
+				miss_Watch[miss_Watch_CNT] = miss_distance_X_float;
+				if(miss_Watch_CNT == 1000)
+				{
+					miss_Watch_CNT = 999;
+				}
+				
+			}
+
+			
+			
+			
+			
+			//帧间误差
+			FY_miss_distance_sub = miss_distance_Y_float_last - miss_distance_Y_float;
+			FY_miss_distance_sub = FY_miss_distance_sub * 0.55;
+			miss_distance_Y_float_last = miss_distance_Y_float;
+			
+			FW_miss_distance_sub = miss_distance_X_float_last - miss_distance_X_float;
+			FW_miss_distance_sub = FW_miss_distance_sub * 0.55;
+			miss_distance_X_float_last = miss_distance_X_float;
+			
+			
+
+			if(PT_CNT == 2)
+			{
+//				GPIO_ToggleBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+				PT_FY_miss_distance_sub = PT_miss_distance_Y_float_last - miss_distance_Y_float;
+				PT_miss_distance_Y_float_last = miss_distance_Y_float;
+				
+				PT_FW_miss_distance_sub = PT_miss_distance_X_float_last - miss_distance_X_float;
+				PT_miss_distance_X_float_last = miss_distance_X_float;
+							
+				PT_CNT = 0 ;
+			}
+			
+			
+			
+			if(system_mode == 10)
+			{
+				camera_arry_cnt++;
+				camera_arry[camera_arry_cnt] = miss_distance_X_float;
+				if(camera_arry_cnt == 800)
+				{
+					camera_arry_cnt = 0;
+				}
+			}
+			
+            if(miss_distance_flag == 1)
+			{
+				miss_distance_cnt++;
+				step_open_flag = 3;
+			}
+			
+			if(miss_distance_flag == 0)
+			{
+				miss_distance_cnt = 0;
+				step_open_flag = 0;
+				diaoyong_cnt = 0;
+			}
+//稳态记录			
+			if(miss_distance_cnt == 13)
+			{
+				chakan1 = diaoyong_cnt;
+
+				miss_distance_X_float_end1 = miss_distance_X_float;
+				miss_distance_X_float_sub1 = miss_distance_X_float_end1 - miss_distance_X_float_start1;
+			}
+			else if(miss_distance_cnt == 15)
+			{
+			    miss_distance_X_float_end2 = miss_distance_X_float;
+				miss_distance_X_float_sub2 = miss_distance_X_float_end2 - miss_distance_X_float_start1;
+			}
+			else if(miss_distance_cnt == 17)
+			{
+			    miss_distance_X_float_end3 = miss_distance_X_float;
+				miss_distance_X_float_sub3 = miss_distance_X_float_end3 - miss_distance_X_float_start1;
+			}
+			else if(miss_distance_cnt == 19)
+			{
+			    miss_distance_X_float_end4 = miss_distance_X_float;
+				miss_distance_X_float_sub4 = miss_distance_X_float_end4 - miss_distance_X_float_start1;
+			}
+			else if(miss_distance_cnt == 21)
+			{
+			    miss_distance_X_float_end5 = miss_distance_X_float;
+				miss_distance_X_float_sub5 = miss_distance_X_float_end5 - miss_distance_X_float_start1;
+				
+				miss_distance_X_float_endsum1 = miss_distance_X_float_sub1 + miss_distance_X_float_sub2 + miss_distance_X_float_sub3 + miss_distance_X_float_sub4 + miss_distance_X_float_sub5;
+				if((miss_distance_X_float_endsum1 * 0.2) > 0)
+				{
+					miss_distance_X_float_ave = miss_distance_X_float_endsum1 * 0.2 - TEST_Change;//328,1190
+				}
+				else
+				{
+					miss_distance_X_float_ave = miss_distance_X_float_endsum1 * 0.2 + TEST_Change;		
+				}
+				
+				miss_distance_X_float_start2 = miss_distance_X_float;
+			}
+			
+            else if(miss_distance_cnt == 35)
+			{
+				miss_distance_X_float_end6 = miss_distance_X_float;	
+				miss_distance_X_float_sub6 = miss_distance_X_float_end6 - miss_distance_X_float_start2;				
+			}
+            else if(miss_distance_cnt == 37)
+			{
+				miss_distance_X_float_end7 = miss_distance_X_float;	
+				miss_distance_X_float_sub7 = miss_distance_X_float_end7 - miss_distance_X_float_start2;						
+			}
+            else if(miss_distance_cnt == 39)
+			{
+				miss_distance_X_float_end8 = miss_distance_X_float;	
+				miss_distance_X_float_sub8 = miss_distance_X_float_end8 - miss_distance_X_float_start2;						
+			}
+            else if(miss_distance_cnt == 41)
+			{
+				miss_distance_X_float_end9 = miss_distance_X_float;	
+				miss_distance_X_float_sub9 = miss_distance_X_float_end9 - miss_distance_X_float_start2;						
+			}
+            else if(miss_distance_cnt == 43)
+			{
+				miss_distance_X_float_end10 = miss_distance_X_float;
+				miss_distance_X_float_sub10 = miss_distance_X_float_end10 - miss_distance_X_float_start2;		
+				
+                miss_distance_X_float_endsum2 = miss_distance_X_float_sub6 + miss_distance_X_float_sub7 + miss_distance_X_float_sub8 + miss_distance_X_float_sub9 + miss_distance_X_float_sub10;
+				if((miss_distance_X_float_endsum2 * 0.2) > 0 )
+				{
+					miss_distance_X_float_ave = miss_distance_X_float_endsum2 * 0.2 - TEST_Change;
+				}
+				else
+				{
+					miss_distance_X_float_ave = miss_distance_X_float_endsum2 * 0.2 + TEST_Change;		
+				}
+
+				miss_distance_X_float_start1 = miss_distance_X_float;	
+
+			}
+			else if(miss_distance_cnt == 44)
+			{
+                diaoyong_cnt = 0;	
+                miss_distance_cnt = 0;				
+			}
+//			miss_distance_X_float_ave = miss_distance_X_float_ave * ave_k;
+//		}
+//	}
+		}
+		RMS2_weihudu_X=RMS2_vol1(miss_distance_X_float); 
+		RMS2_weihudu_Y=RMS2_vol2(miss_distance_Y_float);
+		
+}
+
+//串口1读取MEMS陀螺惯导
+void read_inertial_navigation_slave(void)    
+{
+//	if((TEST_ReadDataFlag&0x0001) == 0x0001)
+//	{
+//		u8 usart_1_num = 0;
+//		FPGA_READ_TEST_ADDR = PFPGA_WRITE_USART1;
+//		//接收MEMS惯导数据
+//		for(usart_1_num=0; usart_1_num<30; usart_1_num++)
+//		{
+//	    	read_usart1[usart_1_num]=*(uint32_t*)(FPGA_READ_TEST_ADDR);
+//			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+//		}
+//		if(read_usart1[0] == 0x80 && read_usart1[29] == 0xFF)//判断MEMS惯导帧头
+//		{
+//			ReadImuData();
+//	        
+//            //俯仰速度                                    //越大越往下 0.085
+//			X_axis_palstance_float = X_axis_palstance_float - X_speed_off_set;  //X轴角速度偏置补偿
+//			X_slave_1ms_distance = X_axis_palstance_float * -0.001;             //镜子在1ms内走的路程，取反
+//			X_slave_1ms_distance = X_slave_1ms_distance * 0.5;                  //镜子动θ，光动2θ
+//			//跟踪脱靶量时为负
+//			
+//			//方位轴不乘0.5                               //越大越往左
+//			Z_axis_palstance_float = Z_axis_palstance_float + Z_speed_off_set;   //Y轴角速度偏置补偿
+//			Z_slave_1ms_distance = Z_axis_palstance_float * 0.001;
+//			//跟踪脱靶量时为正
+//		}
+//	}
+}
+void ReadImuData(void)
+{
+	yaw_angle_float_slave = small_navigation_calculate(YAW_ANGLE,ANGLE_GAIN);     //   -->Z轴角速度
+	roll_angle_float_slave = small_navigation_calculate(ROLL_ANGLE,ANGLE_GAIN);   //   -->Y轴角速度
+	pitch_angle_float_slave = small_navigation_calculate(PITCH_ANGLE,ANGLE_GAIN); //
+	
+	X_axis_palstance_float = small_navigation_calculate(PITCH_GERO,GERO_GAIN);
+	Y_axis_palstance_float = small_navigation_calculate(ROLL_GERO,GERO_GAIN);	  //补偿+0.039		
+	Z_axis_palstance_float = small_navigation_calculate(YAW_GERO,GERO_GAIN);      //补偿+0.019
+}
+float small_navigation_calculate(u8 index,float gain)
+{
+	u32 imid0 = 0;
+	u32 imid1 = 0;
+	u32 imid2 = 0;
+	u32 imid3 = 0;
+	float small_navigation_value = 0;
+	
+	imid0 = (read_usart1[index])&0x7F; 
+	imid1 = (read_usart1[index+1])&0x7F; 
+	imid2 = (read_usart1[index+2])&0x3F;
+	imid3 = (imid2<<14)|(imid1<<7)|imid0;
+	if(imid3 & 0x00080000)
+	{
+		imid3 = imid3|0xFFF00000;
+	}
+	small_navigation_value = (float)((int)imid3 * gain);
+	
+	return small_navigation_value;
+}
+
+//串口2读取光纤陀螺惯导(460800)
+void read_inertial_navigation(void)    
+{
+	if((TEST_ReadDataFlag&0x0002) == 0x0002)
+	{
+//		GPIO_ToggleBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+		GuangxianGuandao_Flag = 1;
+		u8 usart_2_num = 0;
+		FPGA_READ_TEST_ADDR = PFPGA_WRITE_USART2;
+		for(usart_2_num=0; usart_2_num<33; usart_2_num++)
+		{
+	    	read_usart2[usart_2_num]=*(uint32_t*)(FPGA_READ_TEST_ADDR);
+			FPGA_READ_TEST_ADDR=FPGA_READ_TEST_ADDR+2;
+		}
+		//姿态角1绕Z转，0-360
+		//姿态角2绕X转，正负180
+		//姿态角3绕Y转，正负180
+		if(read_usart2[0] == 0xEB && read_usart2[1] == 0x90 && read_usart2[32] == 0xBB)
+		{
+//速度		//俯仰速度	
+			x_axis_velocity = read_usart2[4] + (read_usart2[5] << 8) + (read_usart2[6] << 16);
+            x_axis_velocity_supplement = get_optical_navigation(x_axis_velocity);
+			x_axis_velocity_float_ly = (int)x_axis_velocity_supplement * 0.0001;
+			y_axis_velocity_float = x_axis_velocity_float_ly;                     //调转方向后的横滚速度
+//			x_axis_velocity_float = (int)x_axis_velocity_supplement * 0.0001;
+			x_axis_velocity_float = x_axis_velocity_float - FY_OFSET;
+			
+			//横滚速度
+			y_axis_velocity = read_usart2[7] + (read_usart2[8] << 8) + (read_usart2[9] << 16);
+			y_axis_velocity_supplement = get_optical_navigation(y_axis_velocity);
+			y_axis_velocity_float_ly = (int)y_axis_velocity_supplement * 0.0001;
+			x_axis_velocity_float = y_axis_velocity_float_ly;                    //调转方向后的俯仰速度
+//			y_axis_velocity_float = (int)y_axis_velocity_supplement * 0.0001;
+			
+			//偏航速度    方位
+			z_axis_velocity = read_usart2[10] + (read_usart2[11] << 8) + (read_usart2[12] << 16);
+			z_axis_velocity_supplement = get_optical_navigation(z_axis_velocity);
+			z_int = (int)z_axis_velocity_supplement;
+			z_axis_velocity_float = (float)z_int * 0.0001;
+//			z_axis_velocity_float = (int)z_axis_velocity_supplement * 0.0001;
+      z_axis_velocity_float = z_axis_velocity_float - FW_OFSET;
+//加速度			
+			x_axis_accelerated = read_usart2[13] + (read_usart2[14] << 8) + (read_usart2[15] << 16);
+			x_axis_accelerated_supplement = get_optical_navigation(x_axis_accelerated);
+			x_axis_accelerated_float = (int)x_axis_accelerated_supplement * 0.0001;	
+			
+			y_axis_accelerated = read_usart2[16] + (read_usart2[17] << 8) + (read_usart2[18] << 16);
+			y_axis_accelerated_supplement = get_optical_navigation(y_axis_accelerated);
+			y_axis_accelerated_float = (int)y_axis_accelerated_supplement * 0.0001;	
+			
+			z_axis_accelerated = read_usart2[19] + (read_usart2[20] << 8) + (read_usart2[21] << 16);
+			z_axis_accelerated_supplement = get_optical_navigation(z_axis_accelerated);
+			z_axis_accelerated_float = (int)z_axis_accelerated_supplement * 0.0001;	
+//姿态			
+			yaw_attitude = read_usart2[22] + (read_usart2[23] << 8) + (read_usart2[24] << 16);
+			yaw_attitude_float_ly = yaw_attitude * 0.001;
+			if(yaw_attitude_float_ly > 300)
+			{
+				yaw_attitude_float_ly = yaw_attitude_float_ly - 360;
+			}                                                                             //方位
+			yaw_attitude_float_ly = yaw_attitude_float_ly + yaw_offset_val;///补偿
+//			yaw_attitude_float = yaw_attitude_float_ly;
+			
+			pitch_attitude = read_usart2[25] + (read_usart2[26] << 8) + (read_usart2[27] << 16);
+			pitch_attitude_supplement = get_optical_navigation(pitch_attitude);
+			pitch_attitude_float_ly = (int)pitch_attitude_supplement * 0.001;
+			pitch_attitude_float_ly = pitch_attitude_float_ly + roll_offset_val;
+			
+			
+			roll_attitude_before = pitch_attitude_float_ly;
+//			pitch_attitude_float = (int)pitch_attitude_supplement * 0.001;                 //俯仰
+//			pitch_attitude_float = pitch_attitude_float + pitch_offset_val;
+			
+			roll_attitude = read_usart2[28] + (read_usart2[29] << 8) + (read_usart2[30] << 16);
+		    roll_attitude_supplement = get_optical_navigation(roll_attitude);
+			roll_attitude_float_ly = (int)roll_attitude_supplement * 0.001;
+			roll_attitude_float_ly = roll_attitude_float_ly + pitch_offset_val; 
+			
+			pitch_attitude_before = roll_attitude_float_ly;
+			
+			//////////////////惯导坐标转换////////////////////////////
+			
+			//roll_attitude_float = sinf(GD_angle * 3.1415 / 180) * pitch_attitude_before + cosf(GD_angle * 3.1415 / 180)* roll_attitude_before ;
+			//pitch_attitude_float = cosf(GD_angle * 3.1415 / 180) * pitch_attitude_before - sinf(GD_angle * 3.1415 / 180) * roll_attitude_before ;
+			roll_attitude_float = roll_attitude_before;
+			pitch_attitude_float = pitch_attitude_before;
+			
+			if(ly_GD_flag == 1)
+			{
+				yaw_attitude_change = yaw_attitude_float_ly + (roll_attitude_float * sinf(pitch_attitude_float * 3.1415 / 180));
+			}
+			else if(ly_GD_flag == 2)
+			{
+				yaw_attitude_change = yaw_attitude_float_ly - (roll_attitude_float * sinf(pitch_attitude_float * 3.1415 / 180));
+			}
+			yaw_attitude_float = yaw_attitude_change;
+			
+//			roll_attitude_float = (int)roll_attitude_supplement * 0.001;	
+		//////////////////	
+//			yaw_attitude_float=0;
+//			pitch_attitude_float=0;
+//			roll_attitude_float=0;
+
+//			GuanDaoChang();
+//			roll_attitude_float = r_change_later;    //横滚
+//			yaw_attitude_float = y_change_later;     //方位
+//			pitch_attitude_float = p_change_later;   //俯仰
+			
+			
+			
+            //俯仰1ms走的距离			
+			X_slave_1ms_distance = x_axis_velocity_float * (-0.001);             //镜子在1ms内走的路程，取反
+
+			if(system_mode == POINT_MODE || system_mode == 10 || system_mode == 14)
+			{
+				X_slave_1ms_distance_PT = X_slave_1ms_distance * 1;                  //镜子动θ，光动2θ
+			}
+			else
+			{
+				X_slave_1ms_distance_SV = X_slave_1ms_distance * 0.5;                  //镜子动θ，光动2θ
+			}
+			Z_slave_1ms_distance = z_axis_velocity_float * (-0.001f);
+			
+
+			if(z_axis_velocity_float > 0.025)
+			{
+				slave_CNT++;
+				watch_slave_Z[slave_CNT]= z_axis_velocity_float;
+				if(slave_CNT == 1000)
+				{
+					slave_CNT = 0;
+				}					
+			}
+			if(x_axis_velocity_float > 0.025)
+			{
+				slaveX_CNT++;
+				watch_slave_X[slaveX_CNT]= x_axis_velocity_float;
+				if(slaveX_CNT == 1000)
+				{
+					slaveX_CNT = 0;
+				}					
+			}
+			
+//			slaveX_CNT++;
+//			watch_slave_X[slaveX_CNT]= z_axis_velocity_float;
+		
+//			if(slaveX_CNT == 1002)
+//			{
+//			   slaveX_CNT = 1001;
+//			}
+			
+//			x_axis_velocity_1msdistance = x_axis_velocity_float * 0.001;
+//			x_axis_velocity_1msdistance_sum = x_axis_velocity_1msdistance_sum + x_axis_velocity_1msdistance;
+//            y_axis_velocity_1msdistance = y_axis_velocity_float * 0.001;
+//			y_axis_velocity_1msdistance_sum = y_axis_velocity_1msdistance_sum + y_axis_velocity_1msdistance;
+//            z_axis_velocity_1msdistance = z_axis_velocity_float * 0.001;
+//			z_axis_velocity_1msdistance_sum = z_axis_velocity_1msdistance_sum + z_axis_velocity_1msdistance;
+		}	
+	}
+	else
+	{
+		GuangxianGuandao_Flag = 2;
+	}
+}
+u32 get_optical_navigation(u32 threebit)
+{
+	u32 supplement = 0;
+	if(threebit & 0x00800000)
+	{
+		supplement = threebit|0xFF000000;
+	}
+	else
+	{
+		supplement = threebit;
+	}
+	return supplement;
+		
+}
+
+//电机驱动函数
+void motor_move(float FW_location,float FY_location)
+{
+	//俯仰程序限位
+	int FW_location_int = FW_location * 186413;
+	int FY_location_int = FY_location * 186413;
+	if(FY_location_int > 62448355)    //限位（335--270） 实际(337--268)     186413
+	{
+		FY_location_int = 62448355;
+	}
+	if(FY_location_int < 50331510)
+	{
+		FY_location_int = 50331510;
+	}
+	//方位程序限位
+	wPA_FY(0x37f,FY_location_int);
+	wPA_FW(0x37f,FW_location_int);
+	wBG_FY(0x37f);	
+	wBG_FW(0x37f);
+}
+
+//读取上位机指令函数
+void read_master_control()      
+{
+	if((TEST_ReadDataFlag&0x0008) == 0x0008)           //422串口标志位
+//	if((TEST_ReadDataFlag&0x002000) == 0x002000)         //LVDS标志位
+	{
+		Send++;
+		AA_Com_Read();
+	}
+}
+///////////////
+//读取机上惯导函数
+void read_jishangguandao()      
+{
+	//if((TEST_ReadDataFlag&0x0020) == 0x0020)           //422串口标志位
+	if((TEST_ReadDataFlag&0x001000) == 0x001000)         //LVDS标志位
+	{
+		//Send++;
+		AB_Com_Read();
+	}
+}
+/////////
+
+//回零
+void reset_zero(void)
+{
+		if(huiling_once_flag == 1)	//huiling_once_flag = 1
+		{
+				huiling_cnt++;						//huiling_cnt=0
+		}
+
+		if(huiling_cnt == 1)
+		{
+	//		wMO_FW(0x37f,1);
+	//	  Delay_ms(500);
+	//	  Delay_ms(500);
+	//		wMO_FY(0x37f,1);
+	//		Delay_ms(500);
+		}				
+		else if(huiling_cnt == 2)
+		{
+				if(FW_zero_flag == 1)        //在0-40度上电 小于50度上电；FW_zero_flag = 0
+				{
+					FW_location_set = FW_zero_degree_fu;  //FW_zero_degree_fu = 361
+				}
+				else if(FW_zero_flag == 2)   //在126-360上电 正常上电
+				{
+					FW_location_set = FW_zero_degree_zheng;		//FW_zero_degree_zheng=361	
+				}
+				FY_location_set = FY_zero_degree;						//FY_zero_degree=298.25
+		//	FY_Target_Position = FY_zero_degree;
+		//	FW_location_last = FW_location_set;
+		//  FY_location_last = FY_location_set;
+				
+		}		
+		else if(huiling_cnt == 3)
+		{
+				FY_location_loop_open_flag = 1;//打开位置闭环标志位  FY_location_loop_open_flag = 0
+				FW_location_loop_open_flag = 1;//FW_location_loop_open_flag = 0
+				FW_light_loop_open_flag = 0;		//FW_light_loop_open_flag = 0
+				FY_light_loop_open_flag = 0;		//光闭环
+				
+			//打开PID校正标志位 
+				FW_location_para = 4;  //FW_location_para_set；FW_location_para = 0;
+				FY_location_para = 4;  //FY_location_para_set；FY_location_para = 0;	
+		}
+		else if(huiling_cnt > 3)
+		{
+				if(FW_encoder_degrees <250) //俯仰编码器转换为角度，0
+				{
+					FW_location_set = FW_zero_degree_zheng;//FW_zero_degree_zheng=361; 
+					FY_location_set = FY_zero_degree;		
+					huiling_once_flag = 0;
+					huiling_cnt = 0;
+				}
+		}
+}
+
+
+
+
+
+void power_down(void)
+{
+//	if(FW_zero_flag == 1)        //在0-40度上电
+//	{
+//		FW_location_set = FW_zero_degree_fu;  
+//	}
+//	else if(FW_zero_flag == 2)   //在126-360上电
+//	{
+//		FW_location_set = FW_zero_degree_zheng;			
+//	}
+//	FY_location_set = 335; 	
+
+//	FY_location_loop_open_flag = 1;
+//	FW_location_loop_open_flag = 1;
+//	limit_speed_flag = 1;
+		wMO_FW(0x37f,0);//写励磁
+//		wMO_FY(0x37f,0);
+}
+
+
+//float FW_location_kp_step = 120;
+//u8 open_camera_value = 60;
+//u8 FW_rms_cnt = 0;
+//float FW_rms[100];
+//float FW_rms_sum;
+
+//float FW_actual_rms[100];
+//float FW_actual_rms_sum;
+//float FW_rms_ave = 0;
+//float FW_actual_rms_ave = 0;
+//u8 change_kp_value = 60;
+//float FW_location_kp_stable = 200;
+//float X_slave_1ms_distance_sum1_2 = 0;
+//float FW_step_chafen_speed = 0;
+//float FY_step_chafen_speed = 0;
+//float global_FW_step_piror = 0;
+//float global_FY_step_piror = 0;
+
+
+
+void space_scan(void)
+{
+//	step_sin_value = 5*sin(step_sin_cnt / 5000.0 * 2 * 3.1415926);
+//	step_sin_cnt++;
+//	if(step_sin_cnt == 5000)
+//	{
+//		step_sin_cnt = 0;
+//	}
+
+//	Z_slave_1ms_distance_sum = Z_slave_1ms_distance + Z_slave_1ms_distance_sum;  //Z方位
+//	X_slave_1ms_distance_sum = X_slave_1ms_distance + X_slave_1ms_distance_sum;
+//	
+//	
+//	
+////	//赵老师公式起   step_design_arry_prepass[diaoyong_cnt]
+////	//陀螺的FW_relative_rad = (Z_slave_1ms_distance_sum + step_design_arry_prepass[diaoyong_cnt]) * 3.1415926 / 180.0;  
+////	FW_relative_rad = (Z_slave_1ms_distance_sum + step_design_arry_prepass[diaoyong_cnt]) * 3.1415926 / 180.0;
+////	FY_relative_rad = 0 * 3.1415926 / 180.0;
+////		
+////	matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad) + 0.965925*sin(FY_relative_rad);
+////	matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+////	matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+////		
+////	FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 ;   //轴1.2189 --> 空1.1774
+////	FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926 + 15.0) * 0.5;
+////	//赵老师公式终
+//	
+////	GPIO_SetBits(GPIOE,GPIO_Pin_2);
+////	r = -0.15 * pi /180.0;
+////	p = X_slave_1ms_distance_sum * pi /180.0;
+////	y = (Z_slave_1ms_distance_sum + step_design_arry_prepass[diaoyong_cnt]) * pi /180.0;
+////	angle_fy = 0 * pi /180.0;
+////	angle_fw = 0 * pi /180.0;
+////	angle_qj = -105 * pi /180.0;
+////	
+////	x1 = (-cos(p)*sin(y)*cos(angle_qj)+(sin(r)*cos(y)+cos(r)*sin(p)*sin(y))*-sin(angle_qj))*cos(-angle_fy)*sin(-angle_fw) + (cos(p)*cos(y)*cos(angle_qj)+(sin(r)*sin(y)-cos(r)*sin(p)*cos(y))*-sin(angle_qj))*cos(-angle_fy)*cos(-angle_fw) + (sin(p)*cos(angle_qj)+cos(p)*cos(r)*-sin(angle_qj))*sin(-angle_fy);
+////	y1 = -(cos(r)*cos(y)-sin(r)*sin(p)*sin(y))*cos(-angle_fy)*sin(-angle_fw) + -(cos(r)*sin(y)+sin(r)*sin(p)*cos(y))*cos(-angle_fy)*cos(-angle_fw) + sin(r)*cos(p)*sin(-angle_fy);
+////	z1 = (-cos(p)*sin(y)*sin(angle_qj)+(sin(r)*cos(y)+cos(r)*sin(p)*sin(y))*cos(angle_qj))*cos(-angle_fy)*sin(-angle_fw) + (cos(p)*cos(y)*sin(angle_qj)+(sin(r)*sin(y)-cos(r)*sin(p)*cos(y))*cos(angle_qj))*cos(-angle_fy)*cos(-angle_fw) + (sin(p)*sin(angle_qj)+cos(p)*cos(r)*cos(angle_qj))*sin(-angle_fy);
+////	
+////	FW_buchang_degree = atan(y1/z1)*180.0/pi;
+////	FY_buchang_degree = (atan(x1/sqrt(y1*y1+z1*z1))*180/pi+15)/2.0;
+//////	GPIO_ResetBits(GPIOE,GPIO_Pin_2);//GPIOF9,F10设置高，灯灭
+////	
+////	//FW_location_set = FW_zero_degree_zheng - Z_slave_1ms_distance_sum;	
+////	//FW_location_set = FW_zero_degree_zheng - FW_buchang_degree;	
+////	//FY_location_set = FY_zero_degree - FY_buchang_degree;
+////					
+////    FW_location_set = FW_zero_degree_zheng - FW_buchang_degree; //FW_buchang_degree内含阶跃
+////	//FW_location_set = 201 + step_design_arry_prepass[diaoyong_cnt] + step_sin_value;  //step_sin_value
+////	FW_location_actual_set = 201 + step_design_arry[diaoyong_cnt] - FW_buchang_degree; 
+////	FY_location_set = FY_zero_degree - FY_buchang_degree;
+//	
+//	//FY_location_set = FY_zero_degree - zhengfu * FY_buchang_degree + X_slave_1ms_distance_sum;
+
+////改Kp,记初始脱靶量，累计求平均误差	
+//	if(diaoyong_cnt == 1)
+//	{
+////		GPIO_SetBits(GPIOE,GPIO_Pin_2);//计时电平上拉
+//		FW_location_kp = FW_location_kp_step;    //阶跃阶段Kp=130
+//		//记阶跃初始脱靶量1
+//		//miss_distance_X_float_start1 = miss_distance_X_float;
+//	}
+//	else if(diaoyong_cnt == open_camera_value)                
+//	{
+////		GPIO_ResetBits(GPIOE,GPIO_Pin_2);//计时电平下拉
+//	}
+//	else if(diaoyong_cnt > open_camera_value && diaoyong_cnt< 110)  //稳定拍照时间
+//	{
+//		FW_rms_cnt++;
+//		FW_rms[FW_rms_cnt] = FW_location_loop_error;                //编码器误差存入数组
+//		FW_rms_sum = FW_rms[FW_rms_cnt] + FW_rms_sum;               //误差累加
+//		
+//		FW_actual_rms[FW_rms_cnt] = FW_location_loop_actual_error;         //前置滤波前编码器误差存入数组
+//		FW_actual_rms_sum = FW_actual_rms[FW_rms_cnt] + FW_actual_rms_sum; //前置滤波前编码器误差累加
+//	}
+//	
+//	else if(diaoyong_cnt == 110)                         //计时电平上拉       
+//	{
+////		GPIO_SetBits(GPIOE,GPIO_Pin_2);
+//		FW_rms_ave = FW_rms_sum * 0.025;//40个点                //编码器误差求均值
+//		FW_actual_rms_ave = FW_actual_rms_sum * 0.025;  //前置滤波前编码器误差求均值
+//		//FW_rms_ave = FW_rms[1];
+//		//FW_actual_rms_ave = FW_actual_rms[1];
+//		
+//		FW_rms_sum = 0; 
+//		FW_actual_rms_sum = 0;
+//		FW_rms_cnt = 0;
+//		FW_location_kp = FW_location_kp_step;   //阶跃阶段Kp=130
+//		//记阶跃初始脱靶量2
+//		//miss_distance_X_float_start2 = miss_distance_X_float;
+//	}
+//	else if(diaoyong_cnt == (110 + open_camera_value))   
+//	{
+////		GPIO_ResetBits(GPIOE,GPIO_Pin_2);//计时电平下拉 
+//	}
+//	else if(diaoyong_cnt > (110 + open_camera_value) && diaoyong_cnt< 220)   //稳定拍照时间
+//	{
+//		FW_rms_cnt++;
+//		FW_rms[FW_rms_cnt] = FW_location_loop_error;     //编码器误差存入数组
+//		FW_rms_sum = FW_rms[FW_rms_cnt] + FW_rms_sum;    //误差累加
+//		
+//		FW_actual_rms[FW_rms_cnt] = FW_location_loop_actual_error;
+//		FW_actual_rms_sum = FW_actual_rms[FW_rms_cnt] + FW_actual_rms_sum;
+//	}
+//	else if(diaoyong_cnt == 220)                      //清零
+//	{
+//		diaoyong_cnt = 220;                 //需要清零
+//	    FW_rms_ave = FW_rms_sum * 0.025;
+//		FW_actual_rms_ave = FW_actual_rms_sum * 0.025;
+//		//FW_rms_ave = FW_rms[1];
+//		//FW_actual_rms_ave = FW_actual_rms[1];	
+//		FW_rms_sum = 0;
+//	    FW_actual_rms_sum = 0;
+//		FW_rms_cnt = 0;
+//	}
+//	
+////稳定拍照阶段切换高开环增益
+//	if(diaoyong_cnt > change_kp_value && diaoyong_cnt< 110)
+//	{
+//		FW_location_kp = FW_location_kp_stable; 
+//	}
+//    else if(diaoyong_cnt > (110 + change_kp_value) && diaoyong_cnt< 220)
+//	{
+//		FW_location_kp = FW_location_kp_stable; 
+//	}
+//	
+//////稳定拍照时的脱靶量误差
+////	if(diaoyong_cnt == 70)
+////    {
+////		miss_distance_X_float_end1 = miss_distance_X_float;  //endx存的是稳定后
+////		//start_end_arry[]数组存的是脱靶量相对误差
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end1 - miss_distance_X_float_start1;
+////		//对脱靶量相对误差转存，可进行操作
+////		miss_distance_X_float_sub1 = start_end_arry[start_end_cnt];
+////		start_end_cnt++;   //start_end_arry[]数组存200个数
+////	}
+////	else if(diaoyong_cnt == 80)
+////	{
+////		miss_distance_X_float_end2 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end2 - miss_distance_X_float_start1;
+////		miss_distance_X_float_sub2 = start_end_arry[start_end_cnt];
+////		start_end_cnt++;
+////	}
+////    else if(diaoyong_cnt == 90)
+////	{
+////		miss_distance_X_float_end3 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end3 - miss_distance_X_float_start1;
+////		miss_distance_X_float_sub3 = start_end_arry[start_end_cnt];			
+////		start_end_cnt++;
+////	}
+////    else if(diaoyong_cnt == 100)
+////	{
+////		miss_distance_X_float_end4 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end4 - miss_distance_X_float_start1;
+////		miss_distance_X_float_sub4 = start_end_arry[start_end_cnt];		
+////		start_end_cnt++;
+////	}
+////	else if(diaoyong_cnt == 110)
+////	{
+////		miss_distance_X_float_end5 = miss_distance_X_float;
+////	    start_end_arry[start_end_cnt] = miss_distance_X_float_end5 - miss_distance_X_float_start1;
+////		miss_distance_X_float_sub5 = start_end_arry[start_end_cnt];		
+////		start_end_cnt++;
+////		
+////		//一次阶跃计算5个点，累加求和再求平均
+
+////		//********
+////        if(store_open_flag == 1)
+////		{
+////			if(miss_distance_X_float_ave > error_set_value || miss_distance_X_float_ave < -error_set_value)	
+////			{
+////				store0 = miss_distance_X_float_start1;
+////				store1 = miss_distance_X_float_end1;
+////				store2 = miss_distance_X_float_end2;
+////				store3 = miss_distance_X_float_end3;
+////				store4 = miss_distance_X_float_end4;
+////			    store5 = miss_distance_X_float_end5;	
+////                store_open_flag	= 0;				
+////			}
+////            		
+////		}
+////	}
+////	
+////	else if(diaoyong_cnt == 180)
+////	{
+////		miss_distance_X_float_end6 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end6 - miss_distance_X_float_start2;
+////		miss_distance_X_float_sub6 = start_end_arry[start_end_cnt];		
+////		start_end_cnt++;
+////	}
+////	else if(diaoyong_cnt == 190)
+////	{
+////		miss_distance_X_float_end7 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end7 - miss_distance_X_float_start2;
+////		miss_distance_X_float_sub7 = start_end_arry[start_end_cnt];			
+////		start_end_cnt++;
+////	}
+////	else if(diaoyong_cnt == 200)
+////	{
+////		miss_distance_X_float_end8 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end8 - miss_distance_X_float_start2;
+////		miss_distance_X_float_sub8 = start_end_arry[start_end_cnt];			
+////		start_end_cnt++;
+////	}
+////	else if(diaoyong_cnt == 210)
+////	{
+////		miss_distance_X_float_end9 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end9 - miss_distance_X_float_start2;
+////		miss_distance_X_float_sub9 = start_end_arry[start_end_cnt];			
+////		start_end_cnt++;
+////	}
+////	else if(diaoyong_cnt == 220)
+////	{
+////		miss_distance_X_float_end10 = miss_distance_X_float;
+////		start_end_arry[start_end_cnt] = miss_distance_X_float_end10 - miss_distance_X_float_start2;
+////		miss_distance_X_float_sub10 = start_end_arry[start_end_cnt];		
+////		start_end_cnt++;
+////		
+////		diaoyong_cnt = 0;
+
+////	}
+////	
+////	if(start_end_cnt == 201)
+////	{
+////		start_end_cnt = 0;  //start_end_arry[]数组存200个数，每5个存一组
+////	}
+//////稳定拍照时的脱靶量误差
+//	X_slave_1ms_distance_sum1_2 = X_slave_1ms_distance_sum * 0.5;
+//	
+//	FW_step_chafen_speed = getFW_step_chafen_speed(global_FW_step_piror,Z_slave_1ms_distance_sum,1000);
+//    FY_step_chafen_speed = getFY_step_chafen_speed(global_FY_step_piror,X_slave_1ms_distance_sum1_2,1000);
+//	
+//	FW_wending_qiankui_speed_lowpass = FsmLeadLag1(FW_step_chafen_speed,FSM_X,2);     //稳定速度前馈滤波
+//	FY_wending_qiankui_speed_lowpass = FsmLeadLag1(FY_step_chafen_speed,FSM_Y,2);
+//	//FY_wending_qiankui_speed_lowpass = FsmLeadLag1(FY_chafen_speed,FSM_Y,2);        //稳定速度前馈滤波
+//	//FY_chafen_speed = getFY_chafen_speed(global_FY_position_piror,X_slave_1ms_distance_sum,1000);
+//	//DA12_out(FW_location_set,FW_location_set);
+//	
+//	
+//	//前置滤波
+////	FW_pre_lowpss_filter = FsmLeadLag1(FW_simulated_target_motion,FSM_X,0);
+////	FY_pre_lowpss_filter = FsmLeadLag1(FY_simulated_target_motion,FSM_Y,0);
+////	
+////	FW_location_set = FW_pre_lowpss_filter;
+////	FY_location_set = FY_pre_lowpss_filter;
+}
+
+
+
+//void stabilization(void)
+//{
+//	if(stabilize_type_select == 1)  //稳定目标为惯导
+//	{
+//		if(stabilize_axis_select == 1)   //只稳定俯仰
+//		{
+//			//1ms走的路程已经取反了
+//			X_slave_1ms_distance_sum = X_slave_1ms_distance + X_slave_1ms_distance_sum;      //X轴角速度积分=俯仰
+//			FY_location_set = FY_zero_degree + X_slave_1ms_distance_sum;
+//			FW_location_set = FW_zero_degree_zheng;
+//		}
+//		else if(stabilize_axis_select == 2)    //只稳定方位
+//		{
+//			FY_location_set = FY_zero_degree;
+//			Z_slave_1ms_distance_sum = Z_slave_1ms_distance + Z_slave_1ms_distance_sum;
+////			//赵老师公式起
+////			FW_relative_rad = (Z_slave_1ms_distance_sum - 1.188) * 3.1415926 / 180.0;   //1.108   1.267
+////			FY_relative_rad = FY_relative_rad;
+////				
+////			matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad);
+////			matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+////			matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+////				
+////			FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 + 1.2298;   //轴1.2189 --> 空1.1774
+////			FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926+15.0) / 2.0;
+////			//赵老师公式终
+//			FW_location_set = FW_zero_degree_zheng - Z_slave_1ms_distance_sum;	
+//		}
+//		else if(stabilize_axis_select == 3)  //稳定方位和俯仰
+//		{
+//			X_slave_1ms_distance_sum = X_slave_1ms_distance + X_slave_1ms_distance_sum;      //X轴角速度积分=俯仰
+//			FY_location_set = FY_zero_degree + X_slave_1ms_distance_sum;
+//			
+//			Z_slave_1ms_distance_sum = Z_slave_1ms_distance + Z_slave_1ms_distance_sum;
+//			//赵老师公式起
+//			FW_relative_rad = (Z_slave_1ms_distance_sum - 1.188) * 3.1415926 / 180.0;   //1.108   1.267
+//			FY_relative_rad = FY_relative_rad;
+//				
+//			matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad);
+//			matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+//			matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+//				
+//			FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 + 1.2298;   //轴1.2189 --> 空1.1774
+//			FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926+15.0) / 2.0;
+//			//赵老师公式终
+//			FW_location_set = FW_zero_degree_zheng - FW_buchang_degree;	
+//		}
+//		else    //稳定在回零位置 
+//		{
+//			FW_location_set = FW_zero_degree_zheng;
+//			FY_location_set = FY_zero_degree;
+//		}
+//	}
+//	else if(stabilize_type_select == 2)   //稳定目标位给定的正弦
+//	{
+//		//5°0.2Hz
+//		sin_value = 5*sin(sin_cnt / 5000.0 * 2 * 3.1415926);
+//		sin_cnt++;
+//		if(sin_cnt == 5000)
+//		{
+//			sin_cnt = 0;
+//		}
+//		FW_location_set = FW_zero_degree_zheng + sin_value;
+//		FY_location_set = FY_zero_degree + sin_value;
+
+//		X_slave_1ms_distance_sum = sin_value;
+//		Z_slave_1ms_distance_sum = sin_value;
+//	}
+//	else    //稳定在回零位置
+//	{
+//		FW_location_set = FW_zero_degree_zheng;
+//		FY_location_set = FY_zero_degree;
+//	}
+//}
+
+void stabilization(void)
+{
+	if(stabilize_type_select == 1)  //稳定目标为惯导
+	{
+		if(stabilize_axis_select == 1)   //只稳定俯仰
+		{
+			//1ms走的路程已经取反了
+			X_slave_1ms_distance_sum = X_slave_1ms_distance + X_slave_1ms_distance_sum;      //X轴角速度积分=俯仰
+			FY_location_set = FY_zero_degree + X_slave_1ms_distance_sum;
+			
+			FW_location_set = FW_zero_degree_zheng;
+		}
+		else if(stabilize_axis_select == 2)    //只稳定方位
+		{
+			FY_location_set = FY_zero_degree;
+			
+			Z_slave_1ms_distance_sum = Z_slave_1ms_distance + Z_slave_1ms_distance_sum;
+//			//赵老师公式起
+//			FW_relative_rad = (Z_slave_1ms_distance_sum - 1.188) * 3.1415926 / 180.0;   //1.108   1.267
+//			FY_relative_rad = FY_relative_rad;
+//				
+//			matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad);
+//			matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+//			matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+//				
+//			FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 + 1.2298;   //轴1.2189 --> 空1.1774
+//			FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926+15.0) / 2.0;
+//			//赵老师公式终
+		    //赵老师公式起
+			FW_relative_rad = Z_slave_1ms_distance_sum * 3.1415926 / 180.0;   //1.108   1.267
+			FY_relative_rad = FY_relative_rad;
+				
+			matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad);
+			matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+			matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+				
+			FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 ;   //轴1.2189 --> 空1.1774
+			FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926+15.0) / 2.0;
+			//赵老师公式终
+			//FW_location_set = FW_zero_degree_zheng - Z_slave_1ms_distance_sum;	
+			FW_location_set = FW_zero_degree_zheng - FW_buchang_degree;	
+		}
+		else if(stabilize_axis_select == 3)  //稳定方位和俯仰
+		{
+			X_slave_1ms_distance_sum = X_slave_1ms_distance + X_slave_1ms_distance_sum;      //X轴角速度积分=俯仰
+			FY_location_set = FY_zero_degree + X_slave_1ms_distance_sum;
+			
+			Z_slave_1ms_distance_sum = Z_slave_1ms_distance + Z_slave_1ms_distance_sum;
+			//赵老师公式起
+			FW_relative_rad = (Z_slave_1ms_distance_sum - 1.188) * 3.1415926 / 180.0;   //1.108   1.267
+			FY_relative_rad = FY_relative_rad;
+				
+			matrix_a = -0.25881905 * cos(FY_relative_rad) * cos(FW_relative_rad);
+			matrix_b = -1.0 * cos(FY_relative_rad) * sin(FW_relative_rad);
+			matrix_c = -0.96592583 * cos(FY_relative_rad) * cos(FW_relative_rad) + (-0.25881905) * sin(FY_relative_rad);
+				
+			FW_buchang_degree = atan(matrix_b / matrix_c) * 180.0 / 3.1415926 + 1.2298;   //轴1.2189 --> 空1.1774
+			FY_buchang_degree = (atan(matrix_a/sqrt(matrix_b*matrix_b+matrix_c*matrix_c))*180.0/3.1415926+15.0) / 2.0;
+			//赵老师公式终
+			FW_location_set = FW_zero_degree_zheng - FW_buchang_degree;	
+		}
+		else    //稳定在回零位置 
+		{
+			FW_location_set = FW_zero_degree_zheng;
+			FY_location_set = FY_zero_degree;
+		}
+	}
+	else if(stabilize_type_select == 2)   //稳定目标位给定的正弦
+	{
+		//5°0.2Hz
+		sin_value = 5*sin(sin_cnt / 5000.0 * 2 * 3.1415926);
+		sin_cnt++;
+		if(sin_cnt == 5000)
+		{
+			sin_cnt = 0;
+		}
+		FW_location_set = FW_zero_degree_zheng + sin_value;
+		FY_location_set = FY_zero_degree + sin_value;
+
+		X_slave_1ms_distance_sum = sin_value;
+		Z_slave_1ms_distance_sum = sin_value;
+	}
+	else    //稳定在回零位置
+	{
+		FW_location_set = FW_zero_degree_zheng;
+		FY_location_set = FY_zero_degree;
+	}
+}
+
+
+
+
+
+void para_set(void)
+{
+	//每个周期重新计算一次双线性变换
+	X0_fsmT1 = FW_pre_lvbo;       //阶跃前置滤波   
+	Y0_fsmT1 = FY_pre_lvbo;
+	
+	X1_fsmT1 = FW_lowpass;        //速度环低通滤波
+	Y1_fsmT1 = FY_lowpass;
+	
+	X2_fsmT1 = FW_wending_qiankui_lvbo;    //稳定前馈滤波
+	Y2_fsmT1 = FY_wending_qiankui_lvbo;
+	
+	X4_fsmT1 = FW_track_qiankui_lvbo;      //跟踪前馈滤波
+	Y4_fsmT1 = FY_track_qiankui_lvbo;
+	
+	X5_fsmTao1 = FW_wending_yijie_tao;     //稳定的一阶校正
+	X5_fsmT1 = FW_wending_yijie_T;
+	Y5_fsmTao1 = FY_wending_yijie_tao;      
+	Y5_fsmT1 = FY_wending_yijie_T;  
+	
+	X3_fsmTao1 = FW_wending_erjie_tao;     //稳定的二阶校正
+	X3_fsmTao2 = FW_wending_erjie_tao;
+	X3_fsmT1 = FW_wending_erjie_T;
+	X3_fsmT2 = FW_wending_erjie_T;
+	Y3_fsmTao1 = FY_wending_erjie_tao;
+	Y3_fsmTao2 = FY_wending_erjie_tao;
+	Y3_fsmT1 = FY_wending_erjie_T;
+	Y3_fsmT2 = FY_wending_erjie_T;
+	
+	X1_fsmT1_servo = FW_lowpass_servo;     //10MS速度环低通滤波
+	Y1_fsmT1_servo = FY_lowpass_servo;
+	
+	X2_fsmTao1_servo = X2_fsmTao1_servo;   //10MS光闭环一阶校正
+	X2_fsmT1_servo = X2_fsmT1_servo;
+	Y2_fsmTao1_servo = Y2_fsmTao1_servo;
+	Y2_fsmT1_servo = Y2_fsmT1_servo;
+
+	X7_fsmTao1_servo = FW_track_erjie_tao_servo;   //10MS光闭环二阶校正
+	X7_fsmTao2_servo = FW_track_erjie_tao_servo;
+	X7_fsmT1_servo = FW_track_erjie_T_servo;
+	X7_fsmT2_servo = FW_track_erjie_T_servo;
+	Y7_fsmTao1_servo = FY_track_erjie_tao_servo;
+	Y7_fsmTao2_servo = FY_track_erjie_tao_servo;
+	Y7_fsmT1_servo = FY_track_erjie_T_servo;
+	Y7_fsmT2_servo = FY_track_erjie_T_servo;
+	
+//	AskfsmFilterPara();         //双线性变换函数
+//	AskfsmFilterPara_servo();
+	
+	accelerate_limit_1ms = accelerate_limit * 0.001;
+}
+
+
+
+
+
+
+float Ary4ToFloat(char c1, char c2, char c3, char c4)     //将4个字节转换成单精度浮点
+{    
+	union FloatToArray fta;
+	fta.ary[0] = c1;    
+	fta.ary[1] = c2;    
+	fta.ary[2] = c3;    
+	fta.ary[3] = c4;    
+	return fta.f;
+}
+float getFY_chafen_speed(float piror,float current,float time)
+{
+	float chafenspeed;
+	chafenspeed = (current - piror) * time;
+	global_FY_position_piror = current;
+	return chafenspeed;
+}
+float getFW_chafen_speed(float piror,float current,float time)
+{
+	float chafenspeed;
+	chafenspeed = (current - piror) * time;
+	global_FW_position_piror = current;
+	return chafenspeed;
+}
+	
+	
+float aa_test;
+//采集命令应答
+void CaiJiMingLing_YingDa()
+{	
+  u8 i=0,Sum2=0;
+	u32 Sum=0;
+	///应答//
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X4c;
+	AA_TXData[5]=63;
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+//if(EXTI2_CNT<=30)aa_test=aa_test+0.02;
+//	else if(EXTI2_CNT<=60)aa_test=aa_test-0.02;
+//	if(EXTI2_CNT>60)EXTI2_CNT=0;
+//	TX_Coarse_Azimuth=FW_encoder_degrees;
+	//粗跟踪伺服方位角度
+//	if(TX_Coarse_Azimuth>360.0)TX_Coarse_Azimuth=0;
+//	TX_Coarse_Azimuth=TX_Coarse_Azimuth+0.001;
+	Temp_Data.f=FW_encoder_degrees;
+//	Temp_Data.f=aa_test;
+	AA_TXData[10]=Temp_Data.ary[0];
+	AA_TXData[11]=Temp_Data.ary[1];
+	AA_TXData[12]=Temp_Data.ary[2];
+	AA_TXData[13]=Temp_Data.ary[3];
+
+	Temp_Data.f=FY_encoder_degrees;
+	//Temp_Data.f=FY_buchang_degree;
+	
+//	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪伺服俯仰角度
+  //Temp_Data.f=aa_test;
+	AA_TXData[14]=Temp_Data.ary[0];
+	AA_TXData[15]=Temp_Data.ary[1];
+	AA_TXData[16]=Temp_Data.ary[2];
+	AA_TXData[17]=Temp_Data.ary[3];
+//姿态图1-偏航
+  TX_Ins_Attitude_FW = yaw_attitude_float;    //偏航  yaw_attitude_float   z_axis_velocity_1msdistance_sum
+	Temp_Data.f=TX_Ins_Attitude_FW;
+	AA_TXData[18]=Temp_Data.ary[0];
+	AA_TXData[19]=Temp_Data.ary[1];
+	AA_TXData[20]=Temp_Data.ary[2];
+	AA_TXData[21]=Temp_Data.ary[3];
+//姿态图2-俯仰	
+  TX_Ins_Attitude_FY = pitch_attitude_float;    //俯仰  pitch_attitude_float   x_axis_velocity_1msdistance_sum
+	Temp_Data.f=TX_Ins_Attitude_FY;
+	AA_TXData[22]=Temp_Data.ary[0];
+	AA_TXData[23]=Temp_Data.ary[1];
+	AA_TXData[24]=Temp_Data.ary[2];
+	AA_TXData[25]=Temp_Data.ary[3];
+//姿态图3-横滚   
+  TX_Ins_Attitude_Roll = roll_attitude_float;     //横滚  roll_attitude_float  y_axis_velocity_1msdistance_sum
+	Temp_Data.f=TX_Ins_Attitude_Roll;
+	AA_TXData[26]=Temp_Data.ary[0];
+	AA_TXData[27]=Temp_Data.ary[1];
+	AA_TXData[28]=Temp_Data.ary[2];
+	AA_TXData[29]=Temp_Data.ary[3];
+//速度图1
+	TX_Ins_Speed_FW=z_axis_velocity_float;                //偏航角速度
+	Temp_Data.f=TX_Ins_Speed_FW;
+	AA_TXData[30]=Temp_Data.ary[0];
+	AA_TXData[31]=Temp_Data.ary[1];
+	AA_TXData[32]=Temp_Data.ary[2];
+	AA_TXData[33]=Temp_Data.ary[3];
+//速度图2
+	TX_Ins_Speed_FY=x_axis_velocity_float;                  //俯仰角速度
+	Temp_Data.f=TX_Ins_Speed_FY;
+	AA_TXData[34]=Temp_Data.ary[0];
+	AA_TXData[35]=Temp_Data.ary[1];
+	AA_TXData[36]=Temp_Data.ary[2];
+	AA_TXData[37]=Temp_Data.ary[3];
+//速度图3
+	TX_Ins_Speed_Roll=y_axis_velocity_float;          //横滚角速度
+	Temp_Data.f=TX_Ins_Speed_Roll;
+	AA_TXData[38]=Temp_Data.ary[0];
+	AA_TXData[39]=Temp_Data.ary[1];
+	AA_TXData[40]=Temp_Data.ary[2];
+	AA_TXData[41]=Temp_Data.ary[3];
+
+	TX_Encoder_FW=FW_encoder_degrees;                   //★方位编码器 
+	Temp_Data.f=TX_Encoder_FW;
+	AA_TXData[42]=Temp_Data.ary[0];
+	AA_TXData[43]=Temp_Data.ary[1];
+	AA_TXData[44]=Temp_Data.ary[2];
+	AA_TXData[45]=Temp_Data.ary[3];
+
+	TX_Encoder_FY=FY_encoder_degrees;                    //★俯仰编码器
+	Temp_Data.f=TX_Encoder_FY;
+	AA_TXData[46]=Temp_Data.ary[0];
+	AA_TXData[47]=Temp_Data.ary[1];
+	AA_TXData[48]=Temp_Data.ary[2];
+	AA_TXData[49]=Temp_Data.ary[3];
+
+// FW_miss_distance_sub  
+// FY_miss_distance_sub
+// miss_distance_X_float
+// miss_distance_Y_float
+// TX_Miss_FW=sin_value;    正弦检验RMS值
+// pitch_angle_float_slave
+// IMU_bit_float
+  
+//	TX_Miss_FW = FW_Miss_distance;            //实际用
+  TX_Miss_FW = FW_send_array[FW_send_array_select];    //测试用
+//  TX_Miss_FW=FY_miss_distance_sub;                   //★方位脱靶量          
+	Temp_Data.f=TX_Miss_FW;       
+
+	AA_TXData[50]=Temp_Data.ary[0];
+	AA_TXData[51]=Temp_Data.ary[1];
+	AA_TXData[52]=Temp_Data.ary[2];
+	AA_TXData[53]=Temp_Data.ary[3];
+
+//  TX_Miss_FY = FY_Miss_distance;               //实际用
+    TX_Miss_FY = FY_send_array[FY_send_array_select];    //测试用
+//	TX_Miss_FY=miss_distance_Y_float;                   //★俯仰脱靶量
+	Temp_Data.f=TX_Miss_FY;     
+	AA_TXData[54]=Temp_Data.ary[0];
+	AA_TXData[55]=Temp_Data.ary[1];
+	AA_TXData[56]=Temp_Data.ary[2];
+	AA_TXData[57]=Temp_Data.ary[3];
+
+	
+//	read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)	
+//	{
+		AA_TXData[58] = Read_JiaoYanHouShuJu[15];                //快反射镜方位角度
+		AA_TXData[59] = Read_JiaoYanHouShuJu[16];
+		AA_TXData[60] = Read_JiaoYanHouShuJu[17];
+		AA_TXData[61] = Read_JiaoYanHouShuJu[18];
+		
+		AA_TXData[62] = Read_JiaoYanHouShuJu[19];                //快反射镜俯仰角度
+		AA_TXData[63] = Read_JiaoYanHouShuJu[20];
+		AA_TXData[64] = Read_JiaoYanHouShuJu[21];
+		AA_TXData[65] = Read_JiaoYanHouShuJu[22];
+		
+//		Read_JiaoYan_Flag =0;
+//	}
+
+	
+//	TX_Fast_Reflection_Mirror_FW=13;                       //快反射镜方位角度
+//	Temp_Data.f=TX_Fast_Reflection_Mirror_FW;
+//	AA_TXData[58]=Temp_Data.ary[0];
+//	AA_TXData[59]=Temp_Data.ary[1];
+//	AA_TXData[60]=Temp_Data.ary[2];
+//	AA_TXData[61]=Temp_Data.ary[3];
+
+	
+//	TX_Fast_Reflection_Mirror_FY=15;                       //快反射镜俯仰角度
+//	Temp_Data.f=TX_Fast_Reflection_Mirror_FY;
+//	AA_TXData[62]=Temp_Data.ary[0];
+//	AA_TXData[63]=Temp_Data.ary[1];
+//	AA_TXData[64]=Temp_Data.ary[2];
+//	AA_TXData[65]=Temp_Data.ary[3];
+//	if(Work_Mode==0x03)
+//	{ 
+
+//		TX_Servo_Steady_State=0xcc;		//跟踪过程中，此状态需要返回  0xaa稳定0xcc运动中
+//	}
+//	else
+//	{
+//		TX_Servo_Steady_State=0xAA;        //跟踪过程中，此状态需要返回  0xaa稳定0xcc运动中
+//	}
+	AA_TXData[66]=TX_Servo_Steady_State;
+	AA_TXData[67]=0XAA;//备份
+	AA_TXData[68]=0XAA;//备份
+	for(i=6;i<(69);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[69]=Sum2;//校验
+	AA_TXData[70]=0X5A;
+	AA_TXData[71]=0XFE;
+	AA_TX_Len=72;	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+	
+
+	Watch_CaiJi[watchi] = FW_encoder_degrees;
+	watchi++;
+	if(watchi == 202)
+	{
+		watchi = 201;
+	}
+	
+	CaiJi_CNT++;
+//	Ma_CaiJi[Ma_watch] = AA_TXData[10];
+//	Ma_CaiJi[Ma_watch+1] = AA_TXData[11];
+//	Ma_CaiJi[Ma_watch+2] = AA_TXData[12];
+//	Ma_CaiJi[Ma_watch+3] = AA_TXData[13];
+
+	
+	
+//	Ma_watch = Ma_watch + 4;
+////	TX_watch = TX_watch + 4;
+//	
+//	if(Ma_watch == 244)
+//	{
+//		watchi = 240;
+//	}
+//	if(TX_watch == 62)
+//	{
+//		watchi = 61;
+//	}
+	
+	
+}
+
+//自检应答
+void ZiJian_YingDa()
+{
+	u8 i=0;
+	u8 Sum2=0;             //和校验低8位校验字节（补成零的）
+	u32 Sum=0;	           //和校验总和
+	AA_TXData[0]=0X5A;    
+	AA_TXData[1]=0X54;     //帧头
+	AA_TXData[2]=0X17;     //发送端为伺服设备
+	AA_TXData[3]=0X10;     //接收端为主控设备
+	AA_TXData[4]=0X40;     //自检应答
+	AA_TXData[5]=11;       //数据长度
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;	
+//	AA_TXData[10]=0;//32--39bit故障位赋值            ☆故障代码
+	
+	if(EE1_fw==0)    //方位轴编码器工作状态      0         
+	{
+		AA_TXData[10] = AA_TXData[10]&0XFE;     
+	}
+	else
+	{
+	  AA_TXData[10] = AA_TXData[10]|0X01;     
+	}
+//	AA_TXData[11]=0;//40--41bit故障位赋值            ☆故障代码
+ //	if(FY_encoder_Flag==1)
+//	EE1_fy
+	if(EE1_fy==0)     //俯仰轴编码器工作状态     1
+	{
+		AA_TXData[10] = AA_TXData[10]&0XFD;     
+	}
+	else
+	{
+	  AA_TXData[10] = AA_TXData[10]|0X02;     
+	}	
+//	Temp_Data.f=1;///方位驱动器电流            ☆方位电流   
+//	AA_TXData[12]=1;// 
+	if(GuangxianGuandao_Flag==1)  //光纤惯导工作状态    2
+	{
+		AA_TXData[10] = AA_TXData[10]&0XFB; 
+	}
+	else
+	{
+		AA_TXData[10] = AA_TXData[10]|0X04; 		
+	}
+	
+//	AA_TXData[14]=Temp_Data.ary[1];//
+//	AA_TXData[15]=Temp_Data.ary[2];//
+//	AA_TXData[16]=Temp_Data.ary[3];//
+
+//	Temp_Data.f=2;//俯仰驱动器电流             ☆俯仰电流  
+//	AA_TXData[13]=2;//
+	//MF_fy
+//	if(FW_encoder_Flag==1)
+	if(MF_fw==0)    //方位电机工作状态     3    改  原来是1
+	{
+		AA_TXData[10] = AA_TXData[10]&0XF7;   
+	}
+	else
+	{
+	  AA_TXData[10] = AA_TXData[10]|0X08;    
+	}
+	
+//	AA_TXData[18]=Temp_Data.ary[1];//
+//	AA_TXData[19]=Temp_Data.ary[2];//
+//	AA_TXData[20]=Temp_Data.ary[3];//
+
+//	Temp_Data.f=3;///方位驱动器温度            ☆方位驱动器温度
+//	AA_TXData[14]=3;//
+	
+	if(MF_fy==0)     //俯仰电机工作状态     4   改   原来是1
+	{
+		AA_TXData[10] = AA_TXData[10]&0XEF;     
+	}
+	else
+	{
+	  AA_TXData[10] = AA_TXData[10]|0X10;      
+	}	
+
+	if(Read_JiaoYanHouShuJu[3] == 0x01)       //精跟踪方位电机状态         5      改  原来是0x00
+	{
+		AA_TXData[10] = AA_TXData[10]&0XDF; 			
+	}
+	else
+	{
+		AA_TXData[10] = AA_TXData[10]|0X20;
+	}
+	if(Read_JiaoYanHouShuJu[4] == 0x01)       //精跟踪俯仰电机状态         6     改   原来是0x00
+	{
+		AA_TXData[10] = AA_TXData[10]&0XBF; 			
+	}
+	else
+	{
+		AA_TXData[10] = AA_TXData[10]|0X40;
+	}
+	if(JingGenZong_Err == 0x00)       //信号检测板与精跟踪伺服板通信状态   7
+	{
+		AA_TXData[10] = AA_TXData[10]&0X7F; 			
+	}
+	else
+	{
+		AA_TXData[10] = AA_TXData[10]|0X80;
+	}
+	if(Read_JiaoYanHouShuJu[6] == 0x00)       //精跟踪振镜伺服板状态		 1    
+	{
+		AA_TXData[11] = AA_TXData[11]&0XFD; 			
+	}
+	else
+	{
+		AA_TXData[11] = AA_TXData[11]|0X02;
+	}
+
+//	AA_TXData[22]=Temp_Data.ary[1];//
+//	AA_TXData[23]=Temp_Data.ary[2];//
+//	AA_TXData[24]=Temp_Data.ary[3];//
+
+//	Temp_Data.f=4;//俯仰驱动器温度             ☆俯仰驱动器温度
+//	AA_TXData[15]=4;            //精跟踪方位电机状态
+//	AA_TXData[26]=Temp_Data.ary[1];//
+//	AA_TXData[27]=Temp_Data.ary[2];//
+//	AA_TXData[28]=Temp_Data.ary[3];//			
+//  AA_TXData[16]=0x00;       //精跟踪俯仰电机状态  
+//	AA_TXData[17]=0x00;       //信号检测板与精跟踪伺服板通信状态
+	AA_TXData[11]=AA_TXData[11]&0XFE;       //信号检测伺服板状态              0
+//	AA_TXData[19]=0x00;       //精跟踪振镜伺服板状态
+
+    DianLiu_1 = (int)(DianLiu_FW/0.5);
+	DianLiu_2 = (int)(DianLiu_FY/0.5);
+	AA_TXData[12]=DianLiu_1;       //方位驱动器电流	
+    AA_TXData[13]=DianLiu_2;       //俯仰驱动器电流	
+	AA_TXData[14]=(int) WD_FW;    //方位驱动器温度
+    AA_TXData[15]=(int) WD_FY;    //俯仰驱动器温度
+	
+	if(system_mode == 13)    //外同步
+	{
+		AA_TXData[16]=0x01;
+	}
+	else if(system_mode == 7)   //跟踪
+	{
+		AA_TXData[16]=0x02;
+	}
+	else if(system_mode == 1)   //待机
+	{
+		AA_TXData[16]=0x03;
+	}
+	else if(system_mode == 14)   //人工引导
+	{
+		AA_TXData[16]=0x04;
+	}
+	if(Work_Mode==0x05)   //边扫边跟
+	{
+		AA_TXData[16]=0x05;
+	}
+	
+//	AA_TXData[16]=0x00;       //备用	
+	
+	for(i=6;i<(17);i++)             //各数据字节累加（i比字节索引大1）
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[17]=Sum2;            //校验字节
+	AA_TXData[18]=0X5A;            
+	AA_TXData[19]=0XFE;            //帧尾
+	AA_TX_Len=20;	               //发送字节长度，（比字节索引大1）	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+}
+
+//状态查询模式应答
+void ZhuangTaiChaXun_YingDa()
+{
+	STMFLASH_Read(FLASH_SAVE_ADDR,(u32*)CanShu_Read,38);
+	u8 i=0,Sum2=0;
+	u32 Sum=0;	
+	AA_TXData[0]=0X5A; //帧头
+	AA_TXData[1]=0X54; //帧头
+	AA_TXData[2]=0X17;//发送设备ID
+	AA_TXData[3]=0X10;//接收设备ID
+	AA_TXData[4]=0X42;       //状态查询
+	AA_TXData[5]=51;///数据长度
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+	
+	
+	AA_TXData[10]=CanShu_Read[0];     //粗跟踪方位回零位置
+	AA_TXData[11]=CanShu_Read[1];
+	AA_TXData[12]=CanShu_Read[2];
+	AA_TXData[13]=CanShu_Read[3];
+	
+	AA_TXData[14]=CanShu_Read[4];     //粗跟踪俯仰回零位置
+	AA_TXData[15]=CanShu_Read[5];
+	AA_TXData[16]=CanShu_Read[6];
+	AA_TXData[17]=CanShu_Read[7];
+	
+	AA_TXData[18]=CanShu_Read[30];     //精跟踪方位回零位置
+	AA_TXData[19]=CanShu_Read[31];
+	AA_TXData[20]=CanShu_Read[32];
+	AA_TXData[21]=CanShu_Read[33];
+	
+	AA_TXData[22]=CanShu_Read[34];     //精跟踪俯仰回零位置
+	AA_TXData[23]=CanShu_Read[35];
+	AA_TXData[24]=CanShu_Read[36];
+	AA_TXData[25]=CanShu_Read[37];
+//	switch(AA_Data[10])
+//	{
+////extern int32_t   SO_fw;
+////extern int32_t   EE1_fw;
+////extern int32_t   EC_fw;
+////extern int32_t   MF_fw;
+////extern int32_t   SR_fw;
+//		case 1:
+//		{
+//			AA_TXData[26]=EE1_fw;     
+//	    AA_TXData[27]=EE1_fw>>8;
+//	    AA_TXData[28]=EE1_fw>>16;
+//	    AA_TXData[29]=EE1_fw>>24;            
+//	
+//	    AA_TXData[30]=EE1_fy;     
+//	    AA_TXData[31]=EE1_fy>>8;
+//	    AA_TXData[32]=EE1_fy>>16;
+//	    AA_TXData[33]=EE1_fy>>24;  
+//			break;
+//		}
+//		case 2://自检
+//		{
+//			AA_TXData[26]=SO_fw;     
+//	    AA_TXData[27]=SO_fw>>8;
+//	    AA_TXData[28]=SO_fw>>16;
+//	    AA_TXData[29]=SO_fw>>24;            
+//	
+//	    AA_TXData[30]=SO_fy;     
+//	    AA_TXData[31]=SO_fy>>8;
+//	    AA_TXData[32]=SO_fy>>16;
+//	    AA_TXData[33]=SO_fy>>24;  
+//			break;
+//		}
+//		case 3://自检
+//		{
+//			AA_TXData[26]=EC_fw;     
+//	    AA_TXData[27]=EC_fw>>8;
+//	    AA_TXData[28]=EC_fw>>16;
+//	    AA_TXData[29]=EC_fw>>24;            
+//	
+//	    AA_TXData[30]=EC_fy;     
+//	    AA_TXData[31]=EC_fy>>8;
+//	    AA_TXData[32]=EC_fy>>16;
+//	    AA_TXData[33]=EC_fy>>24;  
+//			break;
+//		}
+//		case 4://自检
+//		{
+//			AA_TXData[26]=MF_fw;     
+//	    AA_TXData[27]=MF_fw>>8;
+//	    AA_TXData[28]=MF_fw>>16;
+//	    AA_TXData[29]=MF_fw>>24;            
+//	
+//	    AA_TXData[30]=MF_fy;     
+//	    AA_TXData[31]=MF_fy>>8;
+//	    AA_TXData[32]=MF_fy>>16;
+//	    AA_TXData[33]=MF_fy>>24;  
+//			break;
+//		}
+//		case 5://自检
+//		{
+//			AA_TXData[26]=SR_fw;     
+//	    AA_TXData[27]=SR_fw>>8;
+//	    AA_TXData[28]=SR_fw>>16;
+//	    AA_TXData[29]=SR_fw>>24;            
+//	
+//	    AA_TXData[30]=SR_fy;     
+//	    AA_TXData[31]=SR_fy>>8;
+//	    AA_TXData[32]=SR_fy>>16;
+//	    AA_TXData[33]=SR_fy>>24;  
+//			break;
+//		}
+//		default:
+//		
+//			break;
+//		
+//	}
+	AA_TXData[26]=0;     
+	AA_TXData[27]=0;
+	AA_TXData[28]=0;
+	AA_TXData[29]=0;            
+	
+	AA_TXData[30]=0;     
+	AA_TXData[31]=0;
+	AA_TXData[32]=0;
+	AA_TXData[33]=0;  
+	
+	AA_TXData[34]=0;     
+	AA_TXData[35]=0;
+	AA_TXData[36]=0;
+	AA_TXData[37]=0;  
+	
+	AA_TXData[38]=0;     
+	AA_TXData[39]=0;
+	AA_TXData[40]=0;
+	AA_TXData[41]=0;  
+	
+	AA_TXData[42]=CanShu_Read[16];       //步进间隔时间
+	AA_TXData[43]=CanShu_Read[17];  
+	
+	AA_TXData[44]=CanShu_Read[18];       //方位每次步进角度
+	AA_TXData[45]=CanShu_Read[19];  
+	
+	AA_TXData[46]=CanShu_Read[20];       //俯仰每次步进角度
+	AA_TXData[47]=CanShu_Read[21];  
+	
+	AA_TXData[48]=CanShu_Read[22];       //稳定时间
+	AA_TXData[49]=CanShu_Read[23];  
+	AA_TXData[50]=CanShu_Read[24];       
+	AA_TXData[51]=CanShu_Read[25]; 
+	
+	AA_TXData[52]=CanShu_Read[26];       //扫描最大方位角1
+	AA_TXData[53]=CanShu_Read[27];       //扫描最大方位角2
+	
+	AA_TXData[54]=CanShu_Read[28];       //扫描最大俯仰角1
+	AA_TXData[55]=CanShu_Read[29];       //扫描最大俯仰角2
+	AA_TXData[56]=0XAA;       //备份
+	
+	for(i=6;i<(57);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[57]=Sum2;      //校验字节
+	AA_TXData[58]=0X5A;
+	AA_TXData[59]=0XFE;
+	AA_TX_Len=60;	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+}
+
+//指向模式应答
+void ZhiXiang_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;	
+	read_FY_encoder();
+	read_FW_encoder();
+	////应答//
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X44;
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;//系统时间。时
+	AA_TXData[7]=Time>>8&0x000000ff;//系统时间。分
+	AA_TXData[8]=Time>>16&0x000000ff;;//系统时间   秒
+	AA_TXData[9]=Time>>24&0x000000ff;;//系统时间  毫秒
+
+	AA_TXData[10]=Point_Mode;//指向模式01仅粗跟踪02仅精跟踪03粗精跟踪04精跟踪校准补偿
+
+
+	TX_Coarse_Azimuth=FW_encoder_degrees;          // ★
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪当前方位位置
+
+	AA_TXData[11]=Temp_Data.ary[0];//粗跟踪方位
+	AA_TXData[12]=Temp_Data.ary[1];//粗跟踪方位
+	AA_TXData[13]=Temp_Data.ary[2];//粗跟踪方位
+	AA_TXData[14]=Temp_Data.ary[3];//粗跟踪方位
+
+	TX_Coarse_Pitch=FY_encoder_degrees;               // ★
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪当前俯仰位置
+
+	AA_TXData[15]=Temp_Data.ary[0];//粗跟踪俯仰
+	AA_TXData[16]=Temp_Data.ary[1];//粗跟踪俯仰
+	AA_TXData[17]=Temp_Data.ary[2];//粗跟踪俯仰
+	AA_TXData[18]=Temp_Data.ary[3];//粗跟踪俯仰
+					
+//	read_JingGenZong_Data();
+//	JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[19]= Read_JiaoYanHouShuJu[15];     //精跟踪当前方位位置
+		AA_TXData[20]= Read_JiaoYanHouShuJu[16];		
+		AA_TXData[21]= Read_JiaoYanHouShuJu[17];	
+		AA_TXData[22]= Read_JiaoYanHouShuJu[18];	
+		
+		AA_TXData[23]=Read_JiaoYanHouShuJu[19];      //精跟踪当前俯仰位置
+		AA_TXData[24]=Read_JiaoYanHouShuJu[20];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[21];
+		AA_TXData[26]=Read_JiaoYanHouShuJu[22];
+//		Read_JiaoYan_Flag = 0;
+//	}
+//	TX_Precise_Azimuth=3;
+//	Temp_Data.f=TX_Precise_Azimuth;//精跟踪初始方位位置
+
+//	AA_TXData[19]=Temp_Data.ary[0];//精跟踪方位
+//	AA_TXData[20]=Temp_Data.ary[1];//
+//	AA_TXData[21]=Temp_Data.ary[2];//
+//	AA_TXData[22]=Temp_Data.ary[3];//
+
+//	TX_Precise_Pitch=4;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪初始俯仰位置
+
+//	AA_TXData[23]=Temp_Data.ary[0];//精跟踪俯仰
+//	AA_TXData[24]=Temp_Data.ary[1];//
+//	AA_TXData[25]=Temp_Data.ary[2];//
+//	AA_TXData[26]=Temp_Data.ary[3];//
+
+	for(i=6;i<(27);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;//校验
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;		
+}
+
+//步进扫描模式应答
+void BuJinSaoMiao_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;	
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X45;
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;//系统时间。时
+	AA_TXData[7]=Time>>8&0x000000ff;//系统时间。分
+	AA_TXData[8]=Time>>16&0x000000ff;;//系统时间   秒
+	AA_TXData[9]=Time>>24&0x000000ff;;//系统时间  毫秒
+
+	TX_Coarse_Azimuth=FW_encoder_degrees;            
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪初始方位位置
+
+	AA_TXData[10]=Temp_Data.ary[0];//粗跟踪方位
+	AA_TXData[11]=Temp_Data.ary[1];//粗跟踪方位
+	AA_TXData[12]=Temp_Data.ary[2];//粗跟踪方位
+	AA_TXData[13]=Temp_Data.ary[3];//粗跟踪方位
+
+	TX_Coarse_Pitch=FY_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪初始俯仰位置
+
+	AA_TXData[14]=Temp_Data.ary[0];//粗跟踪俯仰
+	AA_TXData[15]=Temp_Data.ary[1];//粗跟踪俯仰
+	AA_TXData[16]=Temp_Data.ary[2];//粗跟踪俯仰
+	AA_TXData[17]=Temp_Data.ary[3];//粗跟踪俯仰
+					
+//  read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[18]= Read_JiaoYanHouShuJu[15];     //精跟踪当前方位位置
+		AA_TXData[19]= Read_JiaoYanHouShuJu[16];		
+		AA_TXData[20]= Read_JiaoYanHouShuJu[17];	
+		AA_TXData[21]= Read_JiaoYanHouShuJu[18];	
+		
+		AA_TXData[22]=Read_JiaoYanHouShuJu[19];      //精跟踪当前俯仰位置
+		AA_TXData[23]=Read_JiaoYanHouShuJu[20];
+		AA_TXData[24]=Read_JiaoYanHouShuJu[21];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[22];
+//		Read_JiaoYan_Flag = 0;
+//	}	
+	
+	
+	
+//	TX_Precise_Azimuth=3;
+//	Temp_Data.f=TX_Precise_Azimuth;//精跟踪初始方位位置
+
+//	AA_TXData[18]=Temp_Data.ary[0];//精跟踪方位
+//	AA_TXData[19]=Temp_Data.ary[1];//
+//	AA_TXData[20]=Temp_Data.ary[2];//
+//	AA_TXData[21]=Temp_Data.ary[3];//
+
+//	TX_Precise_Pitch=4;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪初始俯仰位置
+
+//	AA_TXData[22]=Temp_Data.ary[0];//精跟踪俯仰
+//	AA_TXData[23]=Temp_Data.ary[1];//
+//	AA_TXData[24]=Temp_Data.ary[2];//
+//	AA_TXData[25]=Temp_Data.ary[3];//
+
+	AA_TXData[26]=0XAA;//备份
+	for(i=6;i<(27);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;//校验
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;	
+}
+
+//跟踪模式应答
+void GenZong_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;		
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X46;    //启动跟踪应答
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+
+	//AA_TXData[11]=0XAA;//指向模式01仅粗跟踪02仅精跟踪03粗精跟踪04精跟踪校准补偿
+
+	TX_Coarse_Azimuth=FW_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪初始方位位置
+	AA_TXData[10]=Temp_Data.ary[0];//粗跟踪方位
+	AA_TXData[11]=Temp_Data.ary[1];//粗跟踪方位
+	AA_TXData[12]=Temp_Data.ary[2];//粗跟踪方位
+	AA_TXData[13]=Temp_Data.ary[3];//粗跟踪方位
+
+	TX_Coarse_Pitch=FY_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪初始俯仰位置
+
+	AA_TXData[14]=Temp_Data.ary[0];//粗跟踪俯仰
+	AA_TXData[15]=Temp_Data.ary[1];//粗跟踪俯仰
+	AA_TXData[16]=Temp_Data.ary[2];//粗跟踪俯仰
+	AA_TXData[17]=Temp_Data.ary[3];//粗跟踪俯仰
+					
+//	read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[18]= Read_JiaoYanHouShuJu[15];     //精跟踪当前方位位置
+		AA_TXData[19]= Read_JiaoYanHouShuJu[16];		
+		AA_TXData[20]= Read_JiaoYanHouShuJu[17];	
+		AA_TXData[21]= Read_JiaoYanHouShuJu[18];	
+		
+		AA_TXData[22]=Read_JiaoYanHouShuJu[19];      //精跟踪当前俯仰位置
+		AA_TXData[23]=Read_JiaoYanHouShuJu[20];
+		AA_TXData[24]=Read_JiaoYanHouShuJu[21];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[22];
+//		Read_JiaoYan_Flag = 0;
+//	}
+	
+	
+//	TX_Precise_Azimuth=3;
+//	Temp_Data.f=TX_Precise_Azimuth;//精跟踪初始方位位置
+
+//	AA_TXData[18]=Temp_Data.ary[0];//精跟踪方位
+//	AA_TXData[19]=Temp_Data.ary[1];//
+//	AA_TXData[20]=Temp_Data.ary[2];//
+//	AA_TXData[21]=Temp_Data.ary[3];//
+
+//	TX_Precise_Pitch=4;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪初始俯仰位置
+
+//	AA_TXData[22]=Temp_Data.ary[0];//精跟踪俯仰
+//	AA_TXData[23]=Temp_Data.ary[1];//
+//	AA_TXData[24]=Temp_Data.ary[2];//
+//	AA_TXData[25]=Temp_Data.ary[3];//
+
+	AA_TXData[26]=0XAA;//备份
+	for(i=6;i<(27);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;//校验
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+}
+//匀速扫描模式应答
+void YunSuSaoMiao_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;	
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X47;      //启动匀速扫描应答 
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+
+	TX_Coarse_Azimuth=FW_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪初始方位位置
+
+	AA_TXData[10]=Temp_Data.ary[0];
+	AA_TXData[11]=Temp_Data.ary[1];
+	AA_TXData[12]=Temp_Data.ary[2];
+	AA_TXData[13]=Temp_Data.ary[3];
+
+	TX_Coarse_Pitch=FY_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪初始俯仰位置
+
+	AA_TXData[14]=Temp_Data.ary[0];
+	AA_TXData[15]=Temp_Data.ary[1];
+	AA_TXData[16]=Temp_Data.ary[2];
+	AA_TXData[17]=Temp_Data.ary[3];
+					
+//	read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[18]= Read_JiaoYanHouShuJu[15];     //精跟踪当前方位位置
+		AA_TXData[19]= Read_JiaoYanHouShuJu[16];		
+		AA_TXData[20]= Read_JiaoYanHouShuJu[17];	
+		AA_TXData[21]= Read_JiaoYanHouShuJu[18];	
+		
+		AA_TXData[22]=Read_JiaoYanHouShuJu[19];      //精跟踪当前俯仰位置
+		AA_TXData[23]=Read_JiaoYanHouShuJu[20];
+		AA_TXData[24]=Read_JiaoYanHouShuJu[21];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[22];
+//		Read_JiaoYan_Flag = 0;
+//	}
+	
+	
+//	TX_Coarse_Pitch=3;
+//	Temp_Data.f=TX_Coarse_Pitch;//精跟踪初始方位位置
+
+//	AA_TXData[18]=Temp_Data.ary[0];
+//	AA_TXData[19]=Temp_Data.ary[1];
+//	AA_TXData[20]=Temp_Data.ary[2];
+//	AA_TXData[21]=Temp_Data.ary[3];
+
+//	TX_Precise_Pitch=4;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪初始俯仰位置
+
+//	AA_TXData[22]=Temp_Data.ary[0];
+//	AA_TXData[23]=Temp_Data.ary[1];
+//	AA_TXData[24]=Temp_Data.ary[2];
+//	AA_TXData[25]=Temp_Data.ary[3];
+
+	AA_TXData[26]=0XAA;//备份
+	
+	for(i=6;i<(27);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;           //校验字节
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;	
+}
+
+//回零模式应答
+void HuiLing_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X48;    //归零应答
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;
+	AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+
+	TX_Coarse_Azimuth=FW_Huiling_last;
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪伺服方位回零前位置
+	AA_TXData[10]=Temp_Data.ary[0];
+	AA_TXData[11]=Temp_Data.ary[1];
+	AA_TXData[12]=Temp_Data.ary[2];
+	AA_TXData[13]=Temp_Data.ary[3];
+
+	TX_Coarse_Pitch=FY_Huiling_last;
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪伺服俯仰回零前位置
+	AA_TXData[14]=Temp_Data.ary[0];
+	AA_TXData[15]=Temp_Data.ary[1];
+	AA_TXData[16]=Temp_Data.ary[2];
+	AA_TXData[17]=Temp_Data.ary[3];
+
+//	read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[18]= Read_JiaoYanHouShuJu[23];     //精跟装方位回零前位置
+		AA_TXData[19]= Read_JiaoYanHouShuJu[24];		
+		AA_TXData[20]= Read_JiaoYanHouShuJu[25];	
+		AA_TXData[21]= Read_JiaoYanHouShuJu[26];	
+		
+		AA_TXData[22]=Read_JiaoYanHouShuJu[27];      //精跟装俯仰回零前位置
+		AA_TXData[23]=Read_JiaoYanHouShuJu[28];
+		AA_TXData[24]=Read_JiaoYanHouShuJu[29];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[30];
+//		Read_JiaoYan_Flag = 0;
+//	}
+	
+//	TX_Precise_Azimuth=3;
+//	Temp_Data.f=TX_Precise_Azimuth;//精跟踪伺服方位回零前位置
+//	AA_TXData[18]=Temp_Data.ary[0];
+//	AA_TXData[19]=Temp_Data.ary[1];
+//	AA_TXData[20]=Temp_Data.ary[2];
+//	AA_TXData[21]=Temp_Data.ary[3];
+
+//	TX_Precise_Pitch=4;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪伺服俯仰回零前位置
+//	AA_TXData[22]=Temp_Data.ary[0];
+//	AA_TXData[23]=Temp_Data.ary[1];
+//	AA_TXData[24]=Temp_Data.ary[2];
+//	AA_TXData[25]=Temp_Data.ary[3];
+
+	AA_TXData[26]=0XAA;//备份
+	for(i=6;i<(27);i++)//校验
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;      //校验字节
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+}
+
+//急停命令应答
+void JiTing_YingDa()
+{
+	u8 i=0,Sum2=0;
+	u32 Sum=0;
+	AA_TXData[0]=0X5A;
+	AA_TXData[1]=0X54;
+	AA_TXData[2]=0X17;
+	AA_TXData[3]=0X10;
+	AA_TXData[4]=0X49;    //急停应答
+	AA_TXData[5]=21;
+	
+	AA_TXData[6]=Time&0x000000ff;
+  AA_TXData[7]=Time>>8&0x000000ff;
+	AA_TXData[8]=Time>>16&0x000000ff;
+	AA_TXData[9]=Time>>24&0x000000ff;
+	
+	//AA_TXData[11]=0XAA;//指向模式01仅粗跟踪02仅精跟踪03粗精跟踪04精跟踪校准补偿
+	
+	TX_Coarse_Azimuth=FW_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Azimuth;//粗跟踪伺服方位 当前位置
+	AA_TXData[10]=Temp_Data.ary[0];
+	AA_TXData[11]=Temp_Data.ary[1];
+	AA_TXData[12]=Temp_Data.ary[2];
+	AA_TXData[13]=Temp_Data.ary[3];
+	
+	TX_Coarse_Pitch=FY_encoder_degrees;
+	Temp_Data.f=TX_Coarse_Pitch;//粗跟踪伺服俯仰 当前位置
+	AA_TXData[14]=Temp_Data.ary[0];
+	AA_TXData[15]=Temp_Data.ary[1];
+	AA_TXData[16]=Temp_Data.ary[2];
+	AA_TXData[17]=Temp_Data.ary[3];
+					
+//	read_JingGenZong_Data();
+//  JiaoYan_Read_Data();
+//	if(Read_JiaoYan_Flag == 1)
+//	{
+		AA_TXData[18]= Read_JiaoYanHouShuJu[15];     //精跟踪当前方位位置
+		AA_TXData[19]= Read_JiaoYanHouShuJu[16];		
+		AA_TXData[20]= Read_JiaoYanHouShuJu[17];	
+		AA_TXData[21]= Read_JiaoYanHouShuJu[18];	
+		
+		AA_TXData[22]=Read_JiaoYanHouShuJu[19];      //精跟踪当前俯仰位置
+		AA_TXData[23]=Read_JiaoYanHouShuJu[20];
+		AA_TXData[24]=Read_JiaoYanHouShuJu[21];
+		AA_TXData[25]=Read_JiaoYanHouShuJu[22];
+//		Read_JiaoYan_Flag = 0;
+//	}
+	
+//	TX_Precise_Azimuth=5;
+//	Temp_Data.f=TX_Precise_Azimuth;//精跟踪伺服方位 当前位置
+//	AA_TXData[18]=Temp_Data.ary[0];
+//	AA_TXData[19]=Temp_Data.ary[1];
+//	AA_TXData[20]=Temp_Data.ary[2];
+//	AA_TXData[21]=Temp_Data.ary[3];
+//	
+//	TX_Precise_Pitch=5;
+//	Temp_Data.f=TX_Precise_Pitch;//精跟踪伺服俯仰 当前位置
+//	AA_TXData[22]=Temp_Data.ary[0];
+//	AA_TXData[23]=Temp_Data.ary[1];
+//	AA_TXData[24]=Temp_Data.ary[2];
+//	AA_TXData[25]=Temp_Data.ary[3];
+	
+	AA_TXData[26]=0XAA;          //备份
+	for(i=6;i<(27);i++)
+	{
+		Sum+=AA_TXData[i];
+	}
+	Sum2=256-Sum&0xff;
+	AA_TXData[27]=Sum2;          //校验字节
+	AA_TXData[28]=0X5A;
+	AA_TXData[29]=0XFE;
+	AA_TX_Len=30;	
+	AA_Com_Write();
+	CommandOld=CommandNew;
+}
+
+void BuJinSaoMiao()
+{
+//方位
+			if(FW_BuJin_Flag == 1||FW_BuJin_Flag <= FW_BuJin_Count)                 //执行方位步进扫描零位
+			{
+				FW_BuJin_degree_out = FW_BuJin_degree_Start;
+			}
+			else
+			{
+				system_mode = 1;
+				FW_BuJin_Flag = 0;
+			}		
+			if(FW_BuJin_Flag >> 1||FW_BuJin_Flag <= FW_BuJin_Count)			             //按步进行扫描
+			{
+				if(FW_BuJin_Direct == 0x01)      //0x01:向右扫描
+				{
+					FW_BuJin_limit = FW_BuJin_LiangCheng_Degree + FW_BuJin_degree_Start;  //计算右扫描限位									
+					FW_BuJin_degree_out = FW_BuJin_degree_out + FW_BuJin_degree_step;
+					if(FW_BuJin_degree_out >= FW_BuJin_limit)
+					{
+						FW_BuJin_Direct = 0x02;
+					}
+				}
+				else if(FW_BuJin_Direct == 0x02)   //0x02:向左扫描
+				{
+					FW_BuJin_limit = FW_BuJin_degree_Start - FW_BuJin_LiangCheng_Degree;  //计算左扫描限位	
+					FW_BuJin_degree_out = FW_BuJin_degree_out - FW_BuJin_degree_step;
+					if(FW_BuJin_degree_out <= FW_BuJin_limit)
+					{
+						FW_BuJin_Direct = 0x01;
+					}
+				}
+			}
+			else
+			{
+				system_mode = 1;
+				FW_BuJin_Flag = 0;
+			}
+//俯仰
+			if(FY_BuJin_Flag == 1||FY_BuJin_Flag <= FY_BuJin_Count)                 //执行俯仰步进扫描零位
+			{
+				FY_BuJin_degree_out = FY_BuJin_degree_Start;
+			}
+      else
+			{
+				system_mode = 1;
+				FY_BuJin_Flag = 0;
+			}		
+			if(FY_BuJin_Flag >> 1||FY_BuJin_Flag <= FY_BuJin_Count)			             //按步进行扫描
+			{
+				if(FY_BuJin_Direct == 0x01)      //0x01:向上扫描
+				{
+					FY_BuJin_limit = FY_BuJin_LiangCheng_Degree + FY_BuJin_degree_Start;  //计算右扫描限位									
+					FY_BuJin_degree_out = FY_BuJin_degree_out + FY_BuJin_degree_step;
+					if(FY_BuJin_degree_out >= FY_BuJin_limit)
+					{
+						FY_BuJin_Direct = 0x02;
+					}
+				}
+				else if(FY_BuJin_Direct == 0x02)   //0x02:向下扫描
+				{
+					FY_BuJin_limit = FY_BuJin_degree_Start - FY_BuJin_LiangCheng_Degree;  //计算左扫描限位	
+					FY_BuJin_degree_out = FY_BuJin_degree_out - FY_BuJin_degree_step;
+					if(FY_BuJin_degree_out <= FY_BuJin_limit)
+					{
+						FY_BuJin_Direct = 0x01;
+					}
+				}
+			}
+			else
+			{
+				system_mode = 1;
+				FW_BuJin_Flag = 0;
+			}	
+
+			FW_location_set = FW_BuJin_degree_out;
+			FY_location_set = FY_BuJin_degree_out;
+}
+
+float getFW_step_chafen_speed(float piror,float current,float time)
+{
+	float chafenspeed;
+	chafenspeed = (current - piror) * time;
+	global_FW_step_piror = current;
+	return chafenspeed;
+}	
+float getFY_step_chafen_speed(float piror,float current,float time)
+{
+	float chafenspeed;
+	chafenspeed = (current - piror) * time;
+	global_FY_step_piror = current;
+	return chafenspeed;
+}	
