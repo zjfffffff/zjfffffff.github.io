@@ -1,6 +1,0 @@
-..\User\ioinit.c -E -c --cpu Cortex-M4.fp -g -O0 --apcs=interwork -I..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I..\Libraries\CMSIS\Include -I..\User
--I "C:\Users\Administrator\Desktop\2019-8-17俯仰方位上电寻零（指向+扫描+DA)\Chengdu guangdian\project\RTE"
--I E:\MDK5\ARM\PACK\Keil\STM32F4xx_DFP\1.0.8\Device\Include
--I E:\MDK5\ARM\CMSIS\Include
--D__UVISION_VERSION="514" -DSTM32F40_41xxx -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER
--o .\listings\ioinit.i
